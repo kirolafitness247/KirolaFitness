@@ -26,16 +26,36 @@ export default function Manager() {
     window.dispatchEvent(new Event('contentUpdated'))
   }
 
-  const handleImageUpload = (e, path) => {
-    const file = e.target.files[0]
-    if (!file) return
-    const url = URL.createObjectURL(file)
-    handleUpdate(path, url)
-    showToast('✓ Image Updated')
-  }
-
   const saveChanges = () => {
     showToast('✓ All Changes Saved Successfully')
+  }
+
+  // Add new hero images to the array
+  const handleHeroImagesUpload = (e) => {
+    const files = Array.from(e.target.files)
+    if (!files.length) return
+    const urls = files.map(f => URL.createObjectURL(f))
+    const existing = content.hero.backgroundImages || []
+    const updated = [...existing, ...urls]
+    handleUpdate('hero.backgroundImages', updated)
+    showToast(`✓ ${files.length} image${files.length > 1 ? 's' : ''} added`)
+    e.target.value = '' // reset so same file can be re-added
+  }
+
+  // Remove a single hero image by index
+  const removeHeroImage = (index) => {
+    const updated = (content.hero.backgroundImages || []).filter((_, i) => i !== index)
+    handleUpdate('hero.backgroundImages', updated)
+    showToast('✓ Image Removed')
+  }
+
+  // Reorder: swap image left
+  const moveImage = (index, direction) => {
+    const arr = [...(content.hero.backgroundImages || [])]
+    const target = index + direction
+    if (target < 0 || target >= arr.length) return
+    ;[arr[index], arr[target]] = [arr[target], arr[index]]
+    handleUpdate('hero.backgroundImages', arr)
   }
 
   const sections = [
@@ -51,6 +71,8 @@ export default function Manager() {
     { id: 'trainersPage', label: '👥 Trainers Page' },
     { id: 'eventsPage', label: '📅 Events Page' },
   ]
+
+  const heroImages = content.hero.backgroundImages || []
 
   return (
     <div className="mgr-root">
@@ -92,8 +114,176 @@ export default function Manager() {
             <div className="section-card">
               <div className="section-header">
                 <div className="section-title">Hero Section</div>
-                <div className="section-desc">Main landing section</div>
+                <div className="section-desc">Main landing section — upload multiple images for a slideshow</div>
               </div>
+
+              {/* ── Multi-Image Upload Zone ── */}
+              <div className="form-group">
+                <label className="form-label">
+                  Hero Slideshow Images
+                  {heroImages.length > 0 && (
+                    <span style={{
+                      marginLeft: '10px', fontSize: '10px', letterSpacing: '2px',
+                      color: 'rgba(201,168,76,0.7)', fontWeight: 700,
+                      background: 'rgba(201,168,76,0.1)',
+                      padding: '2px 8px', borderRadius: '3px',
+                    }}>
+                      {heroImages.length} image{heroImages.length !== 1 ? 's' : ''} · slides every 3s
+                    </span>
+                  )}
+                </label>
+
+                {/* Existing image thumbnails */}
+                {heroImages.length > 0 && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+                    gap: '12px',
+                    marginBottom: '16px',
+                  }}>
+                    {heroImages.map((src, i) => (
+                      <div key={i} style={{
+                        position: 'relative',
+                        borderRadius: '6px',
+                        overflow: 'hidden',
+                        border: '1px solid rgba(201,168,76,0.2)',
+                        background: '#0d1020',
+                      }}>
+                        <img src={src} alt={`Slide ${i+1}`} style={{
+                          width: '100%', height: '100px',
+                          objectFit: 'cover', display: 'block',
+                        }}/>
+
+                        {/* Slide number badge */}
+                        <div style={{
+                          position: 'absolute', top: '6px', left: '6px',
+                          background: 'rgba(201,168,76,0.9)',
+                          color: '#060810',
+                          fontFamily: "'Barlow Condensed', sans-serif",
+                          fontSize: '10px', fontWeight: 700,
+                          letterSpacing: '1px',
+                          padding: '2px 7px', borderRadius: '3px',
+                        }}>
+                          {i + 1}
+                        </div>
+
+                        {/* Controls overlay */}
+                        <div style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0,
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '6px', background: 'rgba(6,8,16,0.8)',
+                          gap: '4px',
+                        }}>
+                          <div style={{display:'flex',gap:'3px'}}>
+                            <button
+                              onClick={() => moveImage(i, -1)}
+                              disabled={i === 0}
+                              style={{
+                                background: i===0?'rgba(255,255,255,0.05)':'rgba(255,255,255,0.1)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                color: i===0?'rgba(255,255,255,0.2)':'#fff',
+                                cursor: i===0?'not-allowed':'pointer',
+                                padding: '2px 6px', borderRadius: '3px', fontSize: '11px',
+                              }}
+                            >←</button>
+                            <button
+                              onClick={() => moveImage(i, 1)}
+                              disabled={i === heroImages.length - 1}
+                              style={{
+                                background: i===heroImages.length-1?'rgba(255,255,255,0.05)':'rgba(255,255,255,0.1)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                color: i===heroImages.length-1?'rgba(255,255,255,0.2)':'#fff',
+                                cursor: i===heroImages.length-1?'not-allowed':'pointer',
+                                padding: '2px 6px', borderRadius: '3px', fontSize: '11px',
+                              }}
+                            >→</button>
+                          </div>
+                          <button
+                            onClick={() => removeImage(i)}
+                            style={{
+                              background: 'rgba(231,76,60,0.2)',
+                              border: '1px solid rgba(231,76,60,0.3)',
+                              color: '#e74c3c', cursor: 'pointer',
+                              padding: '2px 7px', borderRadius: '3px', fontSize: '11px',
+                            }}
+                          >✕</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Upload dropzone */}
+                <label style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  justifyContent: 'center', gap: '8px',
+                  border: `2px dashed ${heroImages.length > 0 ? 'rgba(201,168,76,0.25)' : 'rgba(201,168,76,0.45)'}`,
+                  borderRadius: '8px',
+                  padding: '28px 20px',
+                  background: 'rgba(201,168,76,0.03)',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.2s, background 0.2s',
+                  position: 'relative',
+                }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleHeroImagesUpload}
+                    style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+                  />
+                  <div style={{fontSize: '28px', opacity: 0.5}}>📸</div>
+                  <div style={{
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontSize: '12px', fontWeight: 700,
+                    letterSpacing: '3px', textTransform: 'uppercase',
+                    color: 'rgba(201,168,76,0.8)',
+                  }}>
+                    {heroImages.length > 0 ? '+ Add More Images' : 'Upload Hero Images'}
+                  </div>
+                  <div style={{
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontSize: '11px', letterSpacing: '1px',
+                    color: 'rgba(255,255,255,0.25)',
+                  }}>
+                    Select multiple at once · JPG, PNG, WebP
+                  </div>
+                </label>
+
+                {heroImages.length > 1 && (
+                  <div style={{
+                    marginTop: '10px',
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontSize: '11px', letterSpacing: '2px',
+                    color: 'rgba(201,168,76,0.5)',
+                    textAlign: 'center',
+                  }}>
+                    ↔ Use arrows to reorder · slides auto-advance every 3 seconds
+                  </div>
+                )}
+              </div>
+
+              {/* Clear all button */}
+              {heroImages.length > 0 && (
+                <div className="form-group" style={{textAlign:'right'}}>
+                  <button
+                    onClick={() => { handleUpdate('hero.backgroundImages', []); showToast('✓ All Images Cleared') }}
+                    style={{
+                      background: 'rgba(231,76,60,0.1)',
+                      border: '1px solid rgba(231,76,60,0.3)',
+                      color: '#e74c3c', cursor: 'pointer',
+                      padding: '8px 18px', borderRadius: '4px',
+                      fontFamily: "'Barlow Condensed', sans-serif",
+                      fontSize: '11px', letterSpacing: '2px',
+                      textTransform: 'uppercase', fontWeight: 600,
+                    }}
+                  >
+                    ✕ Clear All Images
+                  </button>
+                </div>
+              )}
+
+              {/* Rest of hero text fields */}
               <div className="form-group">
                 <label className="form-label">Eyebrow Text</label>
                 <input className="form-input" value={content.hero.eyebrow}
@@ -131,9 +321,7 @@ export default function Manager() {
 
           {activeSection === 'logo' && (
             <div className="section-card">
-              <div className="section-header">
-                <div className="section-title">Logo & Branding</div>
-              </div>
+              <div className="section-header"><div className="section-title">Logo & Branding</div></div>
               <div className="form-group">
                 <label className="form-label">Logo Icon</label>
                 <input className="form-input" value={content.logo.emblemIcon}
@@ -154,9 +342,7 @@ export default function Manager() {
 
           {activeSection === 'stats' && (
             <div className="section-card">
-              <div className="section-header">
-                <div className="section-title">Stats Bar</div>
-              </div>
+              <div className="section-header"><div className="section-title">Stats Bar</div></div>
               {content.stats.map((stat, index) => (
                 <div key={index} className="array-item">
                   <div className="array-item-title">Stat {index + 1}</div>
@@ -179,9 +365,7 @@ export default function Manager() {
 
           {activeSection === 'features' && (
             <div className="section-card">
-              <div className="section-header">
-                <div className="section-title">Features Section</div>
-              </div>
+              <div className="section-header"><div className="section-title">Features Section</div></div>
               <div className="form-group">
                 <label className="form-label">Section Label</label>
                 <input className="form-input" value={content.featuresSection.label}
@@ -217,9 +401,7 @@ export default function Manager() {
 
           {activeSection === 'classes' && (
             <div className="section-card">
-              <div className="section-header">
-                <div className="section-title">Classes Section</div>
-              </div>
+              <div className="section-header"><div className="section-title">Classes Section</div></div>
               <div className="form-group">
                 <label className="form-label">Section Label</label>
                 <input className="form-input" value={content.classesSection.label}
@@ -275,9 +457,7 @@ export default function Manager() {
 
           {activeSection === 'cta' && (
             <div className="section-card">
-              <div className="section-header">
-                <div className="section-title">CTA Banner</div>
-              </div>
+              <div className="section-header"><div className="section-title">CTA Banner</div></div>
               <div className="form-group">
                 <label className="form-label">Label Text</label>
                 <input className="form-input" value={content.cta.label}
@@ -298,9 +478,7 @@ export default function Manager() {
 
           {activeSection === 'footer' && (
             <div className="section-card">
-              <div className="section-header">
-                <div className="section-title">Footer</div>
-              </div>
+              <div className="section-header"><div className="section-title">Footer</div></div>
               <div className="form-group">
                 <label className="form-label">Copyright Text</label>
                 <input className="form-input" value={content.footer.copyright}
@@ -316,9 +494,7 @@ export default function Manager() {
 
           {activeSection === 'about' && (
             <div className="section-card">
-              <div className="section-header">
-                <div className="section-title">About Page</div>
-              </div>
+              <div className="section-header"><div className="section-title">About Page</div></div>
               <div className="form-group">
                 <label className="form-label">Page Title</label>
                 <input className="form-input" value={content.about.title}
@@ -349,9 +525,7 @@ export default function Manager() {
 
           {activeSection === 'classesPage' && (
             <div className="section-card">
-              <div className="section-header">
-                <div className="section-title">Classes Page</div>
-              </div>
+              <div className="section-header"><div className="section-title">Classes Page</div></div>
               <div className="form-group">
                 <label className="form-label">Page Title</label>
                 <input className="form-input" value={content.classesPage.title}
@@ -401,9 +575,7 @@ export default function Manager() {
 
           {activeSection === 'trainersPage' && (
             <div className="section-card">
-              <div className="section-header">
-                <div className="section-title">Trainers Page</div>
-              </div>
+              <div className="section-header"><div className="section-title">Trainers Page</div></div>
               <div className="form-group">
                 <label className="form-label">Page Title</label>
                 <input className="form-input" value={content.trainersPage.title}
@@ -441,9 +613,7 @@ export default function Manager() {
 
           {activeSection === 'eventsPage' && (
             <div className="section-card">
-              <div className="section-header">
-                <div className="section-title">Events Page</div>
-              </div>
+              <div className="section-header"><div className="section-title">Events Page</div></div>
               <div className="form-group">
                 <label className="form-label">Page Title</label>
                 <input className="form-input" value={content.eventsPage.title}
@@ -483,6 +653,7 @@ export default function Manager() {
               ))}
             </div>
           )}
+
         </div>
       </main>
 
@@ -493,4 +664,11 @@ export default function Manager() {
       )}
     </div>
   )
+
+  // Helper used inside JSX above
+  function removeImage(index) {
+    const updated = heroImages.filter((_, i) => i !== index)
+    handleUpdate('hero.backgroundImages', updated)
+    showToast('✓ Image Removed')
+  }
 }

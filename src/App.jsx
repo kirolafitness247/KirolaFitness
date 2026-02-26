@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import Manager from './Manager'
 import About from './About'
@@ -33,16 +33,13 @@ const styles = `
     background: linear-gradient(to bottom, rgba(6,8,16,0.95) 0%, transparent 100%);
   }
 
-  .nav-logo {
-    display: flex; align-items: center; gap: 12px;
-  }
+  .nav-logo { display: flex; align-items: center; gap: 12px; }
 
   .logo-emblem {
     width: 64px; height: 64px; border-radius: 50%;
     border: 2px solid var(--gold);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: rgba(10,13,26,0.9);
-    position: relative;
+    background: rgba(10,13,26,0.9); position: relative;
   }
 
   .logo-emblem::before {
@@ -52,20 +49,15 @@ const styles = `
     display: block; margin-bottom: 2px;
   }
 
-  .logo-emblem-icon {
-    font-size: 20px; line-height: 1;
-  }
+  .logo-emblem-icon { font-size: 20px; line-height: 1; }
 
   .logo-emblem::after {
     content: '— SLOGAN HERE —';
     font-size: 5.5px; letter-spacing: 1.5px; color: var(--gold);
-    font-family: 'Barlow Condensed', sans-serif;
-    display: block; margin-top: 2px;
+    font-family: 'Barlow Condensed', sans-serif; display: block; margin-top: 2px;
   }
 
-  .nav-links {
-    display: flex; align-items: center; gap: 32px; list-style: none;
-  }
+  .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
 
   .nav-links a {
     color: var(--white); text-decoration: none;
@@ -82,9 +74,7 @@ const styles = `
 
   .nav-links a:hover { color: var(--gold); }
 
-  .nav-right {
-    display: flex; align-items: center; gap: 20px;
-  }
+  .nav-right { display: flex; align-items: center; gap: 20px; }
 
   .heart-btn {
     background: none; border: none; cursor: pointer;
@@ -95,24 +85,129 @@ const styles = `
 
   /* HERO */
   .hero {
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    position: relative;
-    overflow: hidden;
+    min-height: 100vh; display: grid;
+    grid-template-columns: 1fr 1fr; position: relative; overflow: hidden;
   }
 
-  .hero-image-side {
-    position: relative; overflow: hidden;
-  }
+  .hero-image-side { position: relative; overflow: hidden; }
 
+  /* Right-side fade */
   .hero-image-side::after {
-    content: '';
-    position: absolute; inset: 0;
+    content: ''; position: absolute; inset: 0;
     background: linear-gradient(to right, transparent 60%, var(--dark) 100%);
-    z-index: 2;
+    z-index: 3; pointer-events: none;
   }
 
+  /* ── CAROUSEL ── */
+  .hero-carousel { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; }
+
+  .hero-carousel-track {
+    display: flex; height: 100%;
+    transition: transform 0.85s cubic-bezier(0.77, 0, 0.175, 1);
+    will-change: transform;
+  }
+
+  .hero-carousel-slide { flex: 0 0 100%; width: 100%; height: 100%; position: relative; overflow: hidden; }
+
+  .hero-carousel-img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+    display: block;
+  }
+
+  /* Ken Burns zoom on active slide */
+  .hero-carousel-slide.active .hero-carousel-img {
+    animation: kenBurns 3.5s ease-out forwards;
+  }
+
+  @keyframes kenBurns {
+    from { transform: scale(1.1); }
+    to   { transform: scale(1.0); }
+  }
+
+  .hero-img-overlay {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(
+      160deg,
+      rgba(6,8,16,0.15) 0%,
+      transparent 50%,
+      rgba(6,8,16,0.3) 100%
+    );
+  }
+
+  /* ── DOTS ── */
+  .carousel-dots {
+    position: absolute; bottom: 32px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 10;
+  }
+
+  .carousel-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    cursor: pointer; padding: 0;
+    transition: all 0.35s ease;
+  }
+
+  .carousel-dot.active {
+    background: var(--gold); border-color: var(--gold);
+    width: 28px; border-radius: 4px;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .carousel-progress {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 3px; z-index: 10;
+    background: rgba(255,255,255,0.07);
+  }
+
+  .carousel-progress-fill {
+    height: 100%; background: var(--gold); width: 0%;
+  }
+
+  .carousel-progress-fill.running {
+    animation: fillBar 3s linear forwards;
+  }
+
+  @keyframes fillBar {
+    from { width: 0%; }
+    to   { width: 100%; }
+  }
+
+  /* ── ARROWS ── */
+  .carousel-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    z-index: 10; background: rgba(10,13,26,0.6);
+    border: 1px solid rgba(201,168,76,0.25);
+    color: var(--white); cursor: pointer;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; transition: all 0.2s;
+    backdrop-filter: blur(6px);
+    opacity: 0; transition: opacity 0.3s;
+  }
+
+  .hero-image-side:hover .carousel-arrow { opacity: 1; }
+
+  .carousel-arrow:hover { background: var(--gold); color: var(--darker); border-color: var(--gold); }
+
+  .carousel-arrow-prev { left: 16px; }
+  .carousel-arrow-next { right: 16px; }
+
+  /* ── COUNTER ── */
+  .carousel-counter {
+    position: absolute; top: 24px; right: 24px; z-index: 10;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; letter-spacing: 3px; font-weight: 700;
+    color: rgba(255,255,255,0.4); text-transform: uppercase;
+    background: rgba(6,8,16,0.45); padding: 5px 10px;
+    backdrop-filter: blur(4px);
+  }
+
+  .carousel-counter span { color: var(--gold); }
+
+  /* ── EMPTY PLACEHOLDER ── */
   .hero-img-placeholder {
     width: 100%; height: 100%;
     background: linear-gradient(135deg, #1a1f35 0%, #0d1020 50%, #060810 100%);
@@ -122,15 +217,12 @@ const styles = `
 
   .stripe-decor {
     position: absolute; top: 120px; left: 30px;
-    display: flex; gap: 8px; transform: rotate(-8deg);
-    z-index: 10;
+    display: flex; gap: 8px; transform: rotate(-8deg); z-index: 10;
   }
 
   .stripe {
-    width: 32px; height: 80px;
-    background: var(--white);
-    clip-path: polygon(20% 0%, 100% 0%, 80% 100%, 0% 100%);
-    opacity: 0.85;
+    width: 32px; height: 80px; background: var(--white);
+    clip-path: polygon(20% 0%, 100% 0%, 80% 100%, 0% 100%); opacity: 0.85;
   }
 
   .stripe-right {
@@ -144,13 +236,10 @@ const styles = `
     background: var(--white); opacity: 0.7;
   }
 
-  .zigzag-decor {
-    position: absolute; top: 140px; right: 80px;
-    z-index: 10;
-  }
-
+  .zigzag-decor { position: absolute; top: 140px; right: 80px; z-index: 10; }
   .zigzag-decor svg { opacity: 0.4; }
 
+  /* HERO CONTENT */
   .hero-content-side {
     display: flex; flex-direction: column;
     justify-content: center; padding: 120px 64px 80px 40px;
@@ -161,21 +250,16 @@ const styles = `
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 12px; letter-spacing: 4px; font-weight: 600;
     color: var(--gold); text-transform: uppercase;
-    margin-bottom: 20px;
-    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
   }
 
-  .hero-eyebrow::before {
-    content: ''; display: block; width: 32px; height: 2px; background: var(--gold);
-  }
+  .hero-eyebrow::before { content: ''; display: block; width: 32px; height: 2px; background: var(--gold); }
 
   .hero-title {
     font-family: 'Bebas Neue', cursive;
     font-size: clamp(72px, 8vw, 110px);
-    line-height: 0.92;
-    letter-spacing: 2px;
-    color: var(--white);
-    margin-bottom: 24px;
+    line-height: 0.92; letter-spacing: 2px;
+    color: var(--white); margin-bottom: 24px;
     animation: slideUp 0.8s ease forwards;
   }
 
@@ -184,24 +268,18 @@ const styles = `
   .hero-subtitle {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 14px; letter-spacing: 5px; font-weight: 600;
-    text-transform: uppercase; color: var(--muted);
-    margin-bottom: 44px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 44px;
   }
 
-  .hero-cta {
-    display: flex; align-items: center; gap: 20px;
-  }
+  .hero-cta { display: flex; align-items: center; gap: 20px; }
 
   .btn-primary {
     background: var(--white); color: var(--darker);
     border: none; padding: 16px 40px;
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 13px; letter-spacing: 4px; font-weight: 700;
-    text-transform: uppercase; cursor: pointer;
-    transition: all 0.25s;
-    position: relative; overflow: hidden;
+    text-transform: uppercase; cursor: pointer; transition: all 0.25s;
   }
-
   .btn-primary:hover { background: var(--gold); }
 
   .btn-outline {
@@ -211,15 +289,12 @@ const styles = `
     font-size: 13px; letter-spacing: 4px; font-weight: 600;
     text-transform: uppercase; cursor: pointer; transition: all 0.25s;
   }
-
   .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
 
-  /* STATS BAR */
+  /* STATS */
   .stats-bar {
-    background: var(--gold);
-    padding: 24px 80px;
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 0;
+    background: var(--gold); padding: 24px 80px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
   }
 
   .stat-item {
@@ -228,195 +303,55 @@ const styles = `
   }
   .stat-item:last-child { border-right: none; }
 
-  .stat-num {
-    font-family: 'Bebas Neue', cursive;
-    font-size: 40px; line-height: 1; color: var(--darker);
-  }
+  .stat-num { font-family: 'Bebas Neue', cursive; font-size: 40px; line-height: 1; color: var(--darker); }
+  .stat-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; color: rgba(0,0,0,0.6); margin-top: 4px; }
 
-  .stat-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px; letter-spacing: 3px; font-weight: 700;
-    text-transform: uppercase; color: rgba(0,0,0,0.6);
-    margin-top: 4px;
-  }
+  /* FEATURES */
+  .features { padding: 100px 80px; background: var(--darker); position: relative; }
 
-  /* FEATURES SECTION */
-  .features {
-    padding: 100px 80px;
-    background: var(--darker);
-    position: relative;
-  }
+  .section-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 5px; font-weight: 700; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+  .section-title { font-family: 'Bebas Neue', cursive; font-size: clamp(48px, 5vw, 72px); line-height: 1; color: var(--white); margin-bottom: 60px; }
 
-  .section-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px; letter-spacing: 5px; font-weight: 700;
-    text-transform: uppercase; color: var(--gold);
-    margin-bottom: 16px;
-  }
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
 
-  .section-title {
-    font-family: 'Bebas Neue', cursive;
-    font-size: clamp(48px, 5vw, 72px);
-    line-height: 1; color: var(--white);
-    margin-bottom: 60px;
-  }
-
-  .features-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 2px;
-  }
-
-  .feature-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
-    padding: 40px 32px;
-    position: relative; overflow: hidden;
-    transition: background 0.3s, border-color 0.3s;
-    cursor: default;
-  }
-
-  .feature-card:hover {
-    background: rgba(201,168,76,0.06);
-    border-color: rgba(201,168,76,0.25);
-  }
-
+  .feature-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 40px 32px; position: relative; overflow: hidden; transition: background 0.3s, border-color 0.3s; cursor: default; }
+  .feature-card:hover { background: rgba(201,168,76,0.06); border-color: rgba(201,168,76,0.25); }
   .feature-card:hover .feature-icon { color: var(--gold); }
+  .feature-icon { font-size: 36px; margin-bottom: 20px; display: block; transition: color 0.3s; color: var(--white); }
+  .feature-title { font-family: 'Bebas Neue', cursive; font-size: 28px; letter-spacing: 1px; color: var(--white); margin-bottom: 12px; }
+  .feature-desc { font-size: 14px; line-height: 1.7; color: var(--muted); }
 
-  .feature-icon {
-    font-size: 36px; margin-bottom: 20px;
-    display: block; transition: color 0.3s; color: var(--white);
-  }
-
-  .feature-title {
-    font-family: 'Bebas Neue', cursive;
-    font-size: 28px; letter-spacing: 1px;
-    color: var(--white); margin-bottom: 12px;
-  }
-
-  .feature-desc {
-    font-size: 14px; line-height: 1.7; color: var(--muted);
-  }
-
-  /* CLASSES SECTION */
-  .classes {
-    padding: 100px 80px;
-    background: var(--dark);
-  }
-
-  .classes-header {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    margin-bottom: 48px;
-  }
-
-  .classes-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
-  }
-
-  .class-card {
-    position: relative; overflow: hidden; aspect-ratio: 3/4;
-    background: #1a1f35;
-    cursor: pointer;
-  }
-
-  .class-card:first-child {
-    grid-row: span 2; aspect-ratio: auto;
-  }
-
-  .class-card-bg {
-    position: absolute; inset: 0;
-    background-size: cover; background-position: center;
-    transition: transform 0.5s ease;
-  }
-
+  /* CLASSES */
+  .classes { padding: 100px 80px; background: var(--dark); }
+  .classes-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; }
+  .classes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .class-card { position: relative; overflow: hidden; aspect-ratio: 3/4; background: #1a1f35; cursor: pointer; }
+  .class-card:first-child { grid-row: span 2; aspect-ratio: auto; }
+  .class-card-bg { position: absolute; inset: 0; background-size: cover; background-position: center; transition: transform 0.5s ease; }
   .class-card:hover .class-card-bg { transform: scale(1.05); }
+  .class-card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(6,8,16,0.9) 0%, transparent 60%); }
+  .class-card-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 28px; }
+  .class-tag { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; display: block; }
+  .class-name { font-family: 'Bebas Neue', cursive; font-size: 32px; color: var(--white); line-height: 1; }
 
-  .class-card-overlay {
-    position: absolute; inset: 0;
-    background: linear-gradient(to top, rgba(6,8,16,0.9) 0%, transparent 60%);
-  }
-
-  .class-card-content {
-    position: absolute; bottom: 0; left: 0; right: 0; padding: 28px;
-  }
-
-  .class-tag {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 10px; letter-spacing: 3px; font-weight: 700;
-    text-transform: uppercase; color: var(--gold);
-    margin-bottom: 8px; display: block;
-  }
-
-  .class-name {
-    font-family: 'Bebas Neue', cursive;
-    font-size: 32px; color: var(--white); line-height: 1;
-  }
-
-  /* CTA SECTION */
-  .cta-section {
-    padding: 100px 80px;
-    background: var(--gold);
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 40px;
-  }
-
+  /* CTA */
+  .cta-section { padding: 100px 80px; background: var(--gold); display: flex; align-items: center; justify-content: space-between; gap: 40px; }
   .cta-text .section-label { color: rgba(0,0,0,0.5); }
   .cta-text .section-title { color: var(--darker); margin-bottom: 0; }
-
-  .btn-dark {
-    background: var(--darker); color: var(--white);
-    border: none; padding: 20px 52px; white-space: nowrap;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; letter-spacing: 4px; font-weight: 700;
-    text-transform: uppercase; cursor: pointer; transition: all 0.25s;
-    flex-shrink: 0;
-  }
-
+  .btn-dark { background: var(--darker); color: var(--white); border: none; padding: 20px 52px; white-space: nowrap; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 4px; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: all 0.25s; flex-shrink: 0; }
   .btn-dark:hover { background: #000; }
 
   /* FOOTER */
-  .footer {
-    background: var(--darker); padding: 40px 80px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-top: 1px solid rgba(255,255,255,0.07);
-  }
-
-  .footer-copy {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 12px; letter-spacing: 2px; color: var(--muted);
-    text-transform: uppercase;
-  }
-
-  .footer-links {
-    display: flex; gap: 28px; list-style: none;
-  }
-
-  .footer-links a {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px; letter-spacing: 3px; color: var(--muted);
-    text-decoration: none; text-transform: uppercase; transition: color 0.2s;
-    cursor: pointer;
-  }
-
+  .footer { background: var(--darker); padding: 40px 80px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.07); }
+  .footer-copy { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .footer-links { display: flex; gap: 28px; list-style: none; }
+  .footer-links a { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--muted); text-decoration: none; text-transform: uppercase; transition: color 0.2s; cursor: pointer; }
   .footer-links a:hover { color: var(--gold); }
-
-  .footer-links a.manager-link {
-    color: var(--gold);
-    border-bottom: 1px solid rgba(201,168,76,0.4);
-    padding-bottom: 2px;
-  }
-
+  .footer-links a.manager-link { color: var(--gold); border-bottom: 1px solid rgba(201,168,76,0.4); padding-bottom: 2px; }
   .footer-links a.manager-link:hover { color: #fff; border-color: #fff; }
 
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .gym-silhouette {
-    position: absolute; width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0.06;
-  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  .gym-silhouette { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; opacity: 0.06; }
 
   @media (max-width: 900px) {
     .hero { grid-template-columns: 1fr; }
@@ -426,24 +361,118 @@ const styles = `
     .nav { padding: 16px 24px; }
     .features, .classes, .cta-section { padding: 60px 24px; }
     .footer { flex-direction: column; gap: 20px; }
+    .carousel-arrow { opacity: 1; }
   }
 `
 
-// ── Inner home page component (needs useNavigate inside BrowserRouter) ──
+// ── Hero Carousel ──
+function HeroCarousel({ images }) {
+  const [current, setCurrent] = useState(0)
+  const [progKey, setProgKey] = useState(0)
+  const timerRef = useRef(null)
+  const total = images.length
+
+  const startTimer = () => {
+    clearInterval(timerRef.current)
+    if (total <= 1) return
+    timerRef.current = setInterval(() => {
+      setCurrent(c => (c + 1) % total)
+      setProgKey(k => k + 1)
+    }, 3000)
+  }
+
+  useEffect(() => {
+    startTimer()
+    return () => clearInterval(timerRef.current)
+  }, [total])
+
+  const goTo = (index) => {
+    const next = ((index % total) + total) % total
+    setCurrent(next)
+    setProgKey(k => k + 1)
+    startTimer() // reset timer on manual nav
+  }
+
+  return (
+    <div className="hero-carousel">
+      {/* Track */}
+      <div
+        className="hero-carousel-track"
+        style={{ transform: `translateX(-${current * 100}%)` }}
+      >
+        {images.map((src, i) => (
+          <div key={i} className={`hero-carousel-slide ${i === current ? 'active' : ''}`}>
+            <img src={src} alt={`Slide ${i + 1}`} className="hero-carousel-img" />
+            <div className="hero-img-overlay" />
+          </div>
+        ))}
+      </div>
+
+      {/* Decorative stripes */}
+      <div className="stripe-decor" style={{zIndex:10}}>
+        <div className="stripe"/><div className="stripe"/>
+        <div className="stripe"/><div className="stripe"/>
+      </div>
+
+      <div className="zigzag-decor" style={{zIndex:10}}>
+        <svg width="120" height="16" viewBox="0 0 120 16">
+          <polyline points="0,8 10,0 20,8 30,0 40,8 50,0 60,8 70,0 80,8 90,0 100,8 110,0 120,8"
+            fill="none" stroke="white" strokeWidth="2"/>
+        </svg>
+      </div>
+
+      <div className="stripe-right" style={{zIndex:10}}>
+        <div className="chevron"/><div className="chevron" style={{opacity:0.5}}/>
+      </div>
+
+      {total > 1 && (
+        <>
+          {/* Counter */}
+          <div className="carousel-counter">
+            <span>{String(current + 1).padStart(2,'0')}</span> / {String(total).padStart(2,'0')}
+          </div>
+
+          {/* Arrows */}
+          <button className="carousel-arrow carousel-arrow-prev" onClick={() => goTo(current - 1)}>&#8592;</button>
+          <button className="carousel-arrow carousel-arrow-next" onClick={() => goTo(current + 1)}>&#8594;</button>
+
+          {/* Dots */}
+          <div className="carousel-dots">
+            {images.map((_, i) => (
+              <button key={i} className={`carousel-dot${i === current ? ' active' : ''}`} onClick={() => goTo(i)} />
+            ))}
+          </div>
+
+          {/* Progress bar */}
+          <div className="carousel-progress">
+            <div key={progKey} className="carousel-progress-fill running" />
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Home Page ──
 function HomePage() {
   const [liked, setLiked] = useState(false)
   const [active, setActive] = useState('HOME')
   const [content, setContent] = useState(getContent())
   const navigate = useNavigate()
 
-  // Listen for content updates
   useEffect(() => {
-    const handleContentUpdate = () => {
-      setContent(getContent())
-    }
-    window.addEventListener('contentUpdated', handleContentUpdate)
-    return () => window.removeEventListener('contentUpdated', handleContentUpdate)
+    const handler = () => setContent(getContent())
+    window.addEventListener('contentUpdated', handler)
+    return () => window.removeEventListener('contentUpdated', handler)
   }, [])
+
+  // Collect all hero images: multi-upload array takes priority, falls back to single image
+  const heroImages = (() => {
+    const arr = content.hero.backgroundImages
+    if (Array.isArray(arr) && arr.length > 0) return arr
+    if (content.hero.backgroundImage) return [content.hero.backgroundImage]
+    return []
+  })()
 
   return (
     <>
@@ -477,7 +506,7 @@ function HomePage() {
           ))}
         </ul>
         <div className="nav-right">
-          <button className="heart-btn" onClick={() => setLiked(l => !l)} aria-label="Favorite">
+          <button className="heart-btn" onClick={() => setLiked(l => !l)}>
             {liked ? '❤️' : '🤍'}
           </button>
         </div>
@@ -486,38 +515,43 @@ function HomePage() {
       {/* HERO */}
       <section className="hero">
         <div className="hero-image-side">
-          <div className="stripe-decor">
-            <div className="stripe"></div>
-            <div className="stripe"></div>
-            <div className="stripe"></div>
-            <div className="stripe"></div>
-          </div>
-
-          <div className="zigzag-decor">
-            <svg width="120" height="16" viewBox="0 0 120 16">
-              <polyline points="0,8 10,0 20,8 30,0 40,8 50,0 60,8 70,0 80,8 90,0 100,8 110,0 120,8"
-                fill="none" stroke="white" strokeWidth="2"/>
-            </svg>
-          </div>
-
-          <div className="hero-img-placeholder">
-            <div className="gym-silhouette">
-              <svg viewBox="0 0 400 400" fill="white" width="380">
-                <ellipse cx="200" cy="180" rx="40" ry="50" />
-                <rect x="170" y="225" width="20" height="80" />
-                <rect x="210" y="225" width="20" height="80" />
-                <rect x="60" y="175" width="280" height="28" rx="14" />
-                <rect x="60" y="175" width="60" height="28" rx="14" />
-                <rect x="280" y="175" width="60" height="28" rx="14" />
-                <rect x="40" y="165" width="50" height="50" rx="25" />
-                <rect x="310" y="165" width="50" height="50" rx="25" />
-              </svg>
+          {heroImages.length > 0 ? (
+            <HeroCarousel images={heroImages} />
+          ) : (
+            <div className="hero-img-placeholder">
+              <div className="stripe-decor">
+                <div className="stripe"/><div className="stripe"/>
+                <div className="stripe"/><div className="stripe"/>
+              </div>
+              <div className="zigzag-decor">
+                <svg width="120" height="16" viewBox="0 0 120 16">
+                  <polyline points="0,8 10,0 20,8 30,0 40,8 50,0 60,8 70,0 80,8 90,0 100,8 110,0 120,8"
+                    fill="none" stroke="white" strokeWidth="2"/>
+                </svg>
+              </div>
+              <div className="gym-silhouette">
+                <svg viewBox="0 0 400 400" fill="white" width="380">
+                  <ellipse cx="200" cy="180" rx="40" ry="50"/>
+                  <rect x="170" y="225" width="20" height="80"/>
+                  <rect x="210" y="225" width="20" height="80"/>
+                  <rect x="60" y="175" width="280" height="28" rx="14"/>
+                  <rect x="60" y="175" width="60" height="28" rx="14"/>
+                  <rect x="280" y="175" width="60" height="28" rx="14"/>
+                  <rect x="40" y="165" width="50" height="50" rx="25"/>
+                  <rect x="310" y="165" width="50" height="50" rx="25"/>
+                </svg>
+              </div>
+              <div style={{position:'absolute',bottom:'40px',left:'50%',transform:'translateX(-50%)',textAlign:'center',zIndex:5}}>
+                <div style={{fontSize:'40px',opacity:0.12,marginBottom:'8px'}}>🖼️</div>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:'11px',letterSpacing:'4px',fontWeight:600,textTransform:'uppercase',color:'rgba(255,255,255,0.15)'}}>
+                  Upload images in Manager → Hero
+                </div>
+              </div>
+              <div className="stripe-right">
+                <div className="chevron"/><div className="chevron" style={{opacity:0.5}}/>
+              </div>
             </div>
-            <div className="stripe-right">
-              <div className="chevron"></div>
-              <div className="chevron" style={{opacity:0.5}}></div>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="hero-content-side">
@@ -525,8 +559,10 @@ function HomePage() {
           <h1 className="hero-title">
             {content.hero.title.split('\n').map((line, i) => (
               <span key={i}>
-                {line === content.hero.titleHighlight ? <span style={{color: 'var(--gold)'}}>{line}</span> : line}
-                {i < content.hero.title.split('\n').length - 1 && <br />}
+                {line === content.hero.titleHighlight
+                  ? <span style={{color:'var(--gold)'}}>{line}</span>
+                  : line}
+                {i < content.hero.title.split('\n').length - 1 && <br/>}
               </span>
             ))}
           </h1>
@@ -551,8 +587,8 @@ function HomePage() {
       {/* FEATURES */}
       <section className="features">
         <p className="section-label">{content.featuresSection.label}</p>
-        <h2 className="section-title">{content.featuresSection.title.split('\n').map((line, i) => (
-          <span key={i}>{line}{i < content.featuresSection.title.split('\n').length - 1 && <br />}</span>
+        <h2 className="section-title">{content.featuresSection.title.split('\n').map((line,i)=>(
+          <span key={i}>{line}{i<content.featuresSection.title.split('\n').length-1&&<br/>}</span>
         ))}</h2>
         <div className="features-grid">
           {content.features.map((f, i) => (
@@ -576,9 +612,9 @@ function HomePage() {
         </div>
         <div className="classes-grid">
           {content.classes.map((c, i) => (
-            <div className="class-card" key={i} style={i === 0 ? {gridRow:'span 2'} : {}}>
-              <div className="class-card-bg" style={{background: c.image ? `url(${c.image})` : c.bg, backgroundSize: 'cover', backgroundPosition: 'center'}}></div>
-              <div className="class-card-overlay"></div>
+            <div className="class-card" key={i} style={i===0?{gridRow:'span 2'}:{}}>
+              <div className="class-card-bg" style={{background:c.image?`url(${c.image})`:c.bg,backgroundSize:'cover',backgroundPosition:'center'}}/>
+              <div className="class-card-overlay"/>
               <div className="class-card-content">
                 <span className="class-tag">{c.tag}</span>
                 <h3 className="class-name">{c.name}</h3>
@@ -592,8 +628,8 @@ function HomePage() {
       <section className="cta-section">
         <div className="cta-text">
           <p className="section-label">{content.cta.label}</p>
-          <h2 className="section-title">{content.cta.title.split('\n').map((line, i) => (
-            <span key={i}>{line}{i < content.cta.title.split('\n').length - 1 && <br />}</span>
+          <h2 className="section-title">{content.cta.title.split('\n').map((line,i)=>(
+            <span key={i}>{line}{i<content.cta.title.split('\n').length-1&&<br/>}</span>
           ))}</h2>
         </div>
         <button className="btn-dark">{content.cta.buttonText}</button>
@@ -607,9 +643,7 @@ function HomePage() {
             <li key={i}><a>{link}</a></li>
           ))}
           <li>
-            <a className="manager-link" onClick={() => navigate('/manager')}>
-              ⚙ Manager
-            </a>
+            <a className="manager-link" onClick={() => navigate('/manager')}>⚙ Manager</a>
           </li>
         </ul>
       </footer>
@@ -617,7 +651,6 @@ function HomePage() {
   )
 }
 
-// ── Root export with Router + Routes ──
 export default function App() {
   return (
     <BrowserRouter>
