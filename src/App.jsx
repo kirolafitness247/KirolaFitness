@@ -1,6 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import Manager from './Manager'
+import About from './About'
+import Classes from './Classes'
+import Trainers from './Trainers'
+import Equipment from './Equipment'
+import Events from './Events'
+import Register from './Register'
+import { getContent } from './contentStore'
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;900&family=Barlow+Condensed:wght@400;600;700&display=swap');
@@ -422,26 +429,21 @@ const styles = `
   }
 `
 
-const features = [
-  { icon: '🏋️', title: 'Elite Equipment', desc: 'Train with top-of-the-line machines, free weights, and functional training gear for every discipline.' },
-  { icon: '🔥', title: 'Expert Coaches', desc: 'Our certified trainers push you beyond limits with personalized programming and relentless support.' },
-  { icon: '⚡', title: 'Group Classes', desc: 'From HIIT to yoga — 50+ weekly classes designed to challenge, transform, and energize every body.' },
-  { icon: '🥊', title: 'Combat Training', desc: 'Boxing, MMA, and kickboxing programs for all skill levels. Build discipline inside and out.' },
-  { icon: '🧘', title: 'Recovery Zone', desc: 'Infrared saunas, cold plunge pools, and stretching areas to keep your body performing at its best.' },
-  { icon: '📊', title: 'Progress Tracking', desc: 'Smart tools and fitness assessments to measure your growth and keep motivation razor-sharp.' },
-]
-
-const classes = [
-  { tag: 'Strength', name: 'Power Lifting', bg: 'linear-gradient(135deg,#1a2535,#0d1525)' },
-  { tag: 'Cardio', name: 'HIIT Blast', bg: 'linear-gradient(135deg,#1f1a30,#120d20)' },
-  { tag: 'Flexibility', name: 'Yoga Flow', bg: 'linear-gradient(135deg,#1a2520,#0d1a10)' },
-]
-
 // ── Inner home page component (needs useNavigate inside BrowserRouter) ──
 function HomePage() {
   const [liked, setLiked] = useState(false)
   const [active, setActive] = useState('HOME')
+  const [content, setContent] = useState(getContent())
   const navigate = useNavigate()
+
+  // Listen for content updates
+  useEffect(() => {
+    const handleContentUpdate = () => {
+      setContent(getContent())
+    }
+    window.addEventListener('contentUpdated', handleContentUpdate)
+    return () => window.removeEventListener('contentUpdated', handleContentUpdate)
+  }, [])
 
   return (
     <>
@@ -451,17 +453,25 @@ function HomePage() {
       <nav className="nav">
         <div className="nav-logo">
           <div className="logo-emblem">
-            <span className="logo-emblem-icon">⚔️</span>
+            <span className="logo-emblem-icon">{content.logo.emblemIcon}</span>
           </div>
         </div>
         <ul className="nav-links">
-          {['HOME', 'ABOUT', 'CLASSES', 'TRAINERS', 'REGISTER'].map(link => (
-            <li key={link}>
+          {[
+            { name: 'HOME', path: '/' },
+            { name: 'ABOUT', path: '/about' },
+            { name: 'CLASSES', path: '/classes' },
+            { name: 'TRAINERS', path: '/trainers' },
+            { name: 'EQUIPMENT', path: '/equipment' },
+            { name: 'EVENTS', path: '/events' },
+            { name: 'REGISTER', path: '/register' }
+          ].map(link => (
+            <li key={link.name}>
               <a
-                className={active === link ? 'active' : ''}
-                onClick={e => { e.preventDefault(); setActive(link) }}
+                className={active === link.name ? 'active' : ''}
+                onClick={e => { e.preventDefault(); setActive(link.name); navigate(link.path) }}
               >
-                {link}
+                {link.name}
               </a>
             </li>
           ))}
@@ -511,28 +521,27 @@ function HomePage() {
         </div>
 
         <div className="hero-content-side">
-          <p className="hero-eyebrow">Elite Fitness Center</p>
+          <p className="hero-eyebrow">{content.hero.eyebrow}</p>
           <h1 className="hero-title">
-            Achieve<br />Your<br />
-            <span>Fitness</span><br />Goals
+            {content.hero.title.split('\n').map((line, i) => (
+              <span key={i}>
+                {line === content.hero.titleHighlight ? <span style={{color: 'var(--gold)'}}>{line}</span> : line}
+                {i < content.hero.title.split('\n').length - 1 && <br />}
+              </span>
+            ))}
           </h1>
-          <p className="hero-subtitle">Become a Member Today</p>
+          <p className="hero-subtitle">{content.hero.subtitle}</p>
           <div className="hero-cta">
-            <button className="btn-primary">Register Now</button>
-            <button className="btn-outline">Learn More</button>
+            <button className="btn-primary">{content.hero.primaryBtn}</button>
+            <button className="btn-outline">{content.hero.secondaryBtn}</button>
           </div>
         </div>
       </section>
 
       {/* STATS */}
       <div className="stats-bar">
-        {[
-          { num: '5K+', label: 'Active Members' },
-          { num: '120+', label: 'Weekly Classes' },
-          { num: '40+', label: 'Expert Trainers' },
-          { num: '15', label: 'Years of Excellence' },
-        ].map(s => (
-          <div className="stat-item" key={s.label}>
+        {content.stats.map((s, i) => (
+          <div className="stat-item" key={i}>
             <span className="stat-num">{s.num}</span>
             <span className="stat-label">{s.label}</span>
           </div>
@@ -541,11 +550,13 @@ function HomePage() {
 
       {/* FEATURES */}
       <section className="features">
-        <p className="section-label">Why Choose Us</p>
-        <h2 className="section-title">World-Class<br />Facilities</h2>
+        <p className="section-label">{content.featuresSection.label}</p>
+        <h2 className="section-title">{content.featuresSection.title.split('\n').map((line, i) => (
+          <span key={i}>{line}{i < content.featuresSection.title.split('\n').length - 1 && <br />}</span>
+        ))}</h2>
         <div className="features-grid">
-          {features.map(f => (
-            <div className="feature-card" key={f.title}>
+          {content.features.map((f, i) => (
+            <div className="feature-card" key={i}>
               <span className="feature-icon">{f.icon}</span>
               <h3 className="feature-title">{f.title}</h3>
               <p className="feature-desc">{f.desc}</p>
@@ -558,15 +569,15 @@ function HomePage() {
       <section className="classes">
         <div className="classes-header">
           <div>
-            <p className="section-label">What We Offer</p>
-            <h2 className="section-title" style={{marginBottom:0}}>Our Classes</h2>
+            <p className="section-label">{content.classesSection.label}</p>
+            <h2 className="section-title" style={{marginBottom:0}}>{content.classesSection.title}</h2>
           </div>
-          <button className="btn-outline">View All Classes</button>
+          <button className="btn-outline">{content.classesSection.buttonText}</button>
         </div>
         <div className="classes-grid">
-          {classes.map((c, i) => (
-            <div className="class-card" key={c.name} style={i === 0 ? {gridRow:'span 2'} : {}}>
-              <div className="class-card-bg" style={{background: c.bg}}></div>
+          {content.classes.map((c, i) => (
+            <div className="class-card" key={i} style={i === 0 ? {gridRow:'span 2'} : {}}>
+              <div className="class-card-bg" style={{background: c.image ? `url(${c.image})` : c.bg, backgroundSize: 'cover', backgroundPosition: 'center'}}></div>
               <div className="class-card-overlay"></div>
               <div className="class-card-content">
                 <span className="class-tag">{c.tag}</span>
@@ -580,20 +591,21 @@ function HomePage() {
       {/* CTA */}
       <section className="cta-section">
         <div className="cta-text">
-          <p className="section-label">Limited Spots Available</p>
-          <h2 className="section-title">Start Your<br />Journey Today</h2>
+          <p className="section-label">{content.cta.label}</p>
+          <h2 className="section-title">{content.cta.title.split('\n').map((line, i) => (
+            <span key={i}>{line}{i < content.cta.title.split('\n').length - 1 && <br />}</span>
+          ))}</h2>
         </div>
-        <button className="btn-dark">Register Now</button>
+        <button className="btn-dark">{content.cta.buttonText}</button>
       </section>
 
       {/* FOOTER */}
       <footer className="footer">
-        <p className="footer-copy">© 2025 GYM — All Rights Reserved</p>
+        <p className="footer-copy">{content.footer.copyright}</p>
         <ul className="footer-links">
-          <li><a>Privacy</a></li>
-          <li><a>Terms</a></li>
-          <li><a>Contact</a></li>
-          <li><a>Instagram</a></li>
+          {content.footer.links.map((link, i) => (
+            <li key={i}><a>{link}</a></li>
+          ))}
           <li>
             <a className="manager-link" onClick={() => navigate('/manager')}>
               ⚙ Manager
@@ -611,6 +623,12 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/classes" element={<Classes />} />
+        <Route path="/trainers" element={<Trainers />} />
+        <Route path="/equipment" element={<Equipment />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/manager" element={<Manager />} />
       </Routes>
     </BrowserRouter>
