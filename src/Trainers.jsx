@@ -16,7 +16,7 @@ const styles = `
   .page-header h1 span { color: var(--gold); }
   .page-header p { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; letter-spacing: 2px; color: var(--muted); }
   .section { padding: 80px 80px; }
-  .trainers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px; }
+  .trainers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2px; }
   .trainer-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); transition: all 0.3s; display: flex; flex-direction: column; overflow: hidden; }
   .trainer-card:hover { background: rgba(201,168,76,0.06); border-color: rgba(201,168,76,0.25); transform: translateY(-4px); }
   .trainer-photo-wrap { width: 100%; height: 240px; overflow: hidden; position: relative; }
@@ -28,7 +28,9 @@ const styles = `
   .trainer-body { padding: 24px; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; }
   .trainer-name { font-family: 'Bebas Neue', cursive; font-size: 26px; letter-spacing: 1px; color: var(--white); margin-bottom: 5px; line-height: 1; }
   .trainer-specialty { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: var(--gold); margin-bottom: 8px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; }
-  .trainer-exp { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+  .trainer-exp { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: var(--muted); letter-spacing: 1px; margin-bottom: 14px; }
+  .trainer-certs { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 4px; }
+  .trainer-cert-badge { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 2px; font-weight: 700; text-transform: uppercase; padding: 3px 10px; border-radius: 2px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2); color: rgba(201,168,76,0.85); white-space: nowrap; }
   .empty-state { padding: 48px; text-align: center; border: 2px dashed rgba(255,255,255,0.06); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
   .cta-section { padding: 80px 80px; background: var(--gold); display: flex; align-items: center; justify-content: space-between; gap: 40px; }
   .cta-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 5px; font-weight: 700; text-transform: uppercase; color: rgba(0,0,0,0.5); margin-bottom: 14px; }
@@ -88,22 +90,36 @@ export default function Trainers() {
           ? <div className="empty-state">No trainers added yet — manage via the Content Manager</div>
           : (
             <div className="trainers-grid">
-              {trainers.map((t, i) => (
-                <div key={i} className="trainer-card">
-                  <div className="trainer-photo-wrap">
-                    {t.photo
-                      ? <img src={t.photo} alt={t.name} className="trainer-photo" />
-                      : <div className="trainer-photo-placeholder"><div className="trainer-avatar">💪</div></div>
-                    }
+              {trainers.map((t, i) => {
+                const certs = Array.isArray(t.certifications)
+                  ? t.certifications
+                  : typeof t.certifications === 'string' && t.certifications.trim()
+                    ? t.certifications.split(',').map(c => c.trim()).filter(Boolean)
+                    : []
+                return (
+                  <div key={i} className="trainer-card">
+                    <div className="trainer-photo-wrap">
+                      {t.photo
+                        ? <img src={t.photo} alt={t.name} className="trainer-photo" />
+                        : <div className="trainer-photo-placeholder"><div className="trainer-avatar">💪</div></div>
+                      }
+                    </div>
+                    <div className="trainer-accent" />
+                    <div className="trainer-body">
+                      <h3 className="trainer-name">{t.name}</h3>
+                      <div className="trainer-specialty">{t.specialty}</div>
+                      <div className="trainer-exp">📅 {t.exp} experience</div>
+                      {certs.length > 0 && (
+                        <div className="trainer-certs">
+                          {certs.map((cert, ci) => (
+                            <span key={ci} className="trainer-cert-badge">🏅 {cert}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="trainer-accent" />
-                  <div className="trainer-body">
-                    <h3 className="trainer-name">{t.name}</h3>
-                    <div className="trainer-specialty">{t.specialty}</div>
-                    <div className="trainer-exp">📅 {t.exp} experience</div>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )
         }

@@ -71,8 +71,7 @@ const ReviewSchema = new mongoose.Schema({
   name:    { type: String, required: true, trim: true },
   rating:  { type: Number, required: true, min: 1, max: 5 },
   message: { type: String, required: true, trim: true },
-  // optional: trainer name, membership type, avatar initial (derived server-side)
-  approved: { type: Boolean, default: false }, // manager can approve before showing publicly
+  approved: { type: Boolean, default: false },
 }, { timestamps: true })
 
 const Review = mongoose.model('Review', ReviewSchema)
@@ -80,7 +79,7 @@ const Review = mongoose.model('Review', ReviewSchema)
 // ── Multer (memory storage — files go straight to Cloudinary) ──
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  limits: { fileSize: 10 * 1024 * 1024 },
 })
 
 // ── Helper: upload buffer to Cloudinary ──
@@ -191,6 +190,16 @@ app.delete('/api/registrations/:id', async (req, res) => {
   }
 })
 
+// ── DELETE ALL event registrations ──
+app.delete('/api/registrations', async (req, res) => {
+  try {
+    await Registration.deleteMany({})
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
 // ─────────────────────────────────────────────
 //  CLASS BOOKING ROUTES
 // ─────────────────────────────────────────────
@@ -219,6 +228,16 @@ app.get('/api/class-bookings', async (req, res) => {
 app.delete('/api/class-bookings/:id', async (req, res) => {
   try {
     await ClassBooking.findByIdAndDelete(req.params.id)
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+// ── DELETE ALL class bookings ──
+app.delete('/api/class-bookings', async (req, res) => {
+  try {
+    await ClassBooking.deleteMany({})
     res.json({ success: true })
   } catch (err) {
     res.status(500).json({ success: false, error: err.message })
@@ -259,11 +278,20 @@ app.delete('/api/members/:id', async (req, res) => {
   }
 })
 
+// ── DELETE ALL members ──
+app.delete('/api/members', async (req, res) => {
+  try {
+    await MemberRegistration.deleteMany({})
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
 // ─────────────────────────────────────────────
 //  REVIEW ROUTES
 // ─────────────────────────────────────────────
 
-// POST /api/reviews — anyone can submit a review (saved as unapproved)
 app.post('/api/reviews', async (req, res) => {
   try {
     const { name, rating, message } = req.body
@@ -278,7 +306,6 @@ app.post('/api/reviews', async (req, res) => {
   }
 })
 
-// GET /api/reviews — public: only approved reviews
 app.get('/api/reviews', async (req, res) => {
   try {
     const reviews = await Review.find({ approved: true }).sort({ createdAt: -1 }).lean()
@@ -288,7 +315,6 @@ app.get('/api/reviews', async (req, res) => {
   }
 })
 
-// GET /api/reviews/all — manager: all reviews (approved + pending)
 app.get('/api/reviews/all', async (req, res) => {
   try {
     const reviews = await Review.find().sort({ createdAt: -1 }).lean()
@@ -298,14 +324,9 @@ app.get('/api/reviews/all', async (req, res) => {
   }
 })
 
-// PATCH /api/reviews/:id/approve — manager approves a review
 app.patch('/api/reviews/:id/approve', async (req, res) => {
   try {
-    const review = await Review.findByIdAndUpdate(
-      req.params.id,
-      { approved: true },
-      { new: true }
-    )
+    const review = await Review.findByIdAndUpdate(req.params.id, { approved: true }, { new: true })
     if (!review) return res.status(404).json({ success: false, error: 'Review not found' })
     res.json({ success: true, data: review })
   } catch (err) {
@@ -313,14 +334,9 @@ app.patch('/api/reviews/:id/approve', async (req, res) => {
   }
 })
 
-// PATCH /api/reviews/:id/unapprove — manager hides a review
 app.patch('/api/reviews/:id/unapprove', async (req, res) => {
   try {
-    const review = await Review.findByIdAndUpdate(
-      req.params.id,
-      { approved: false },
-      { new: true }
-    )
+    const review = await Review.findByIdAndUpdate(req.params.id, { approved: false }, { new: true })
     if (!review) return res.status(404).json({ success: false, error: 'Review not found' })
     res.json({ success: true, data: review })
   } catch (err) {
@@ -328,7 +344,6 @@ app.patch('/api/reviews/:id/unapprove', async (req, res) => {
   }
 })
 
-// DELETE /api/reviews/:id — manager deletes a review
 app.delete('/api/reviews/:id', async (req, res) => {
   try {
     await Review.findByIdAndDelete(req.params.id)
