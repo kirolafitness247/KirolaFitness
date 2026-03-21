@@ -4,6 +4,7 @@ import mongoose from 'mongoose'
 import { v2 as cloudinary } from 'cloudinary'
 import multer from 'multer'
 import dotenv from 'dotenv'
+import path from 'path'
 
 dotenv.config()
 
@@ -68,36 +69,93 @@ const MemberRegistration = mongoose.model('MemberRegistration', MemberRegistrati
 
 // ── Review Schema ──
 const ReviewSchema = new mongoose.Schema({
-  name:    { type: String, required: true, trim: true },
-  rating:  { type: Number, required: true, min: 1, max: 5 },
-  message: { type: String, required: true, trim: true },
+  name:     { type: String, required: true, trim: true },
+  rating:   { type: Number, required: true, min: 1, max: 5 },
+  message:  { type: String, required: true, trim: true },
   approved: { type: Boolean, default: false },
 }, { timestamps: true })
 
 const Review = mongoose.model('Review', ReviewSchema)
 
-// ── Multer (memory storage — files go straight to Cloudinary) ──
+// ─────────────────────────────────────────────
+//  MULTER — Accept ALL image formats
+//  Covers: jpg, jpeg, png, gif, webp, bmp,
+//          tiff, tif, svg, avif, heic, heif,
+//          ico, jfif — anything image/*
+// ─────────────────────────────────────────────
+
+const ALLOWED_MIME_PREFIXES = ['image/']
+
+// Also allow by extension in case browser sends wrong MIME
+const ALLOWED_EXTENSIONS = new Set([
+  '.jpg', '.jpeg', '.png', '.gif', '.webp',
+  '.bmp', '.tiff', '.tif', '.svg', '.avif',
+  '.heic', '.heif', '.ico', '.jfif', '.jpe',
+  '.jp2', '.jpx',
+])
+
+function imageFileFilter(req, file, cb) {
+  const mime = (file.mimetype || '').toLowerCase()
+  const ext  = path.extname(file.originalname || '').toLowerCase()
+
+  const mimeOk = ALLOWED_MIME_PREFIXES.some(p => mime.startsWith(p))
+  const extOk  = ALLOWED_EXTENSIONS.has(ext)
+
+  // Accept if EITHER mime type OR extension matches
+  // (some mobile browsers send 'application/octet-stream' for HEIC/HEIF)
+  if (mimeOk || extOk) {
+    cb(null, true)
+  } else {
+    cb(new Error(`Unsupported file type: ${mime} (${ext}). Please upload an image file.`))
+  }
+}
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 20 * 1024 * 1024 }, // raised to 20 MB to handle RAW/HEIC
+  fileFilter: imageFileFilter,
 })
 
+// ── Global multer error handler ──
+function handleUploadError(err, req, res, next) {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE')
+      return res.status(400).json({ success: false, error: 'File too large. Maximum size is 20 MB.' })
+    return res.status(400).json({ success: false, error: err.message })
+  }
+  if (err) return res.status(400).json({ success: false, error: err.message })
+  next()
+}
+
 // ── Helper: upload buffer to Cloudinary ──
-function uploadToCloudinary(buffer, folder = 'gym-website', isHero = false) {
+// Cloudinary auto-detects format from buffer — no need to specify format.
+// We pass resource_type: 'image' and let Cloudinary handle conversion.
+function uploadToCloudinary(buffer, folder = 'gym-website', originalName = '') {
   return new Promise((resolve, reject) => {
     const options = {
       folder,
-      resource_type: 'image',
-      quality: 100,
+      resource_type: 'image',   // Cloudinary auto-detects format
+      quality: 'auto:best',     // best quality, auto-optimised
       flags: 'preserve_transparency',
+      // For HEIC/HEIF from iPhone — Cloudinary converts automatically
+      // No format override needed; Cloudinary serves best format per browser
     }
+
+    // If SVG, keep as vector
+    const ext = path.extname(originalName || '').toLowerCase()
+    if (ext === '.svg') {
+      options.resource_type = 'image'
+      delete options.quality // SVGs don't need quality setting
+    }
+
     const stream = cloudinary.uploader.upload_stream(options,
       (err, result) => {
         if (err) return reject(err)
-        if (result.secure_url) {
+        if (result?.secure_url) {
+          // Ensure max quality in URL (no accidental re-compression)
           result.secure_url = result.secure_url
-            .replace('/upload/', '/upload/q_100/')
-            .replace('/q_100/q_100/', '/q_100/')
+            .replace('/upload/', '/upload/q_auto:best/')
+            .replace('/q_auto:best/q_auto:best/', '/q_auto:best/')
         }
         resolve(result)
       }
@@ -190,7 +248,6 @@ app.delete('/api/registrations/:id', async (req, res) => {
   }
 })
 
-// ── DELETE ALL event registrations ──
 app.delete('/api/registrations', async (req, res) => {
   try {
     await Registration.deleteMany({})
@@ -234,7 +291,6 @@ app.delete('/api/class-bookings/:id', async (req, res) => {
   }
 })
 
-// ── DELETE ALL class bookings ──
 app.delete('/api/class-bookings', async (req, res) => {
   try {
     await ClassBooking.deleteMany({})
@@ -278,7 +334,6 @@ app.delete('/api/members/:id', async (req, res) => {
   }
 })
 
-// ── DELETE ALL members ──
 app.delete('/api/members', async (req, res) => {
   try {
     await MemberRegistration.deleteMany({})
@@ -357,10 +412,10 @@ app.delete('/api/reviews/:id', async (req, res) => {
 //  IMAGE UPLOAD ROUTES  (Cloudinary)
 // ─────────────────────────────────────────────
 
-app.post('/api/upload/logo', upload.single('image'), async (req, res) => {
+app.post('/api/upload/logo', upload.single('image'), handleUploadError, async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: 'No file provided' })
-    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/logo')
+    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/logo', req.file.originalname)
     const url = result.secure_url
     const doc = await Content.findOne({ key: 'main' })
     if (doc) {
@@ -375,13 +430,13 @@ app.post('/api/upload/logo', upload.single('image'), async (req, res) => {
   }
 })
 
-app.post('/api/upload/hero', upload.array('images', 20), async (req, res) => {
+app.post('/api/upload/hero', upload.array('images', 20), handleUploadError, async (req, res) => {
   try {
     const files = req.files
     if (!files || files.length === 0)
       return res.status(400).json({ success: false, error: 'No files provided' })
     const urls = await Promise.all(
-      files.map(f => uploadToCloudinary(f.buffer, 'gym-website/hero').then(r => r.secure_url))
+      files.map(f => uploadToCloudinary(f.buffer, 'gym-website/hero', f.originalname).then(r => r.secure_url))
     )
     const doc = await Content.findOne({ key: 'main' })
     if (doc) {
@@ -397,11 +452,11 @@ app.post('/api/upload/hero', upload.array('images', 20), async (req, res) => {
   }
 })
 
-app.post('/api/upload/class/:index', upload.single('image'), async (req, res) => {
+app.post('/api/upload/class/:index', upload.single('image'), handleUploadError, async (req, res) => {
   try {
     const index = parseInt(req.params.index)
     if (!req.file) return res.status(400).json({ success: false, error: 'No file provided' })
-    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/classes')
+    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/classes', req.file.originalname)
     const url = result.secure_url
     const doc = await Content.findOne({ key: 'main' })
     if (doc && doc.data?.classesPage?.classList?.[index] !== undefined) {
@@ -415,11 +470,11 @@ app.post('/api/upload/class/:index', upload.single('image'), async (req, res) =>
   }
 })
 
-app.post('/api/upload/trainer/:index', upload.single('image'), async (req, res) => {
+app.post('/api/upload/trainer/:index', upload.single('image'), handleUploadError, async (req, res) => {
   try {
     const index = parseInt(req.params.index)
     if (!req.file) return res.status(400).json({ success: false, error: 'No file provided' })
-    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/trainers')
+    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/trainers', req.file.originalname)
     const url = result.secure_url
     const doc = await Content.findOne({ key: 'main' })
     if (doc && doc.data?.trainersPage?.trainers?.[index] !== undefined) {
@@ -433,11 +488,11 @@ app.post('/api/upload/trainer/:index', upload.single('image'), async (req, res) 
   }
 })
 
-app.post('/api/upload/home-class/:index', upload.single('image'), async (req, res) => {
+app.post('/api/upload/home-class/:index', upload.single('image'), handleUploadError, async (req, res) => {
   try {
     const index = parseInt(req.params.index)
     if (!req.file) return res.status(400).json({ success: false, error: 'No file provided' })
-    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/home-classes')
+    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/home-classes', req.file.originalname)
     const url = result.secure_url
     const doc = await Content.findOne({ key: 'main' })
     if (doc && doc.data?.classes?.[index] !== undefined) {
@@ -451,11 +506,11 @@ app.post('/api/upload/home-class/:index', upload.single('image'), async (req, re
   }
 })
 
-app.post('/api/upload/event/:index', upload.single('image'), async (req, res) => {
+app.post('/api/upload/event/:index', upload.single('image'), handleUploadError, async (req, res) => {
   try {
     const index = parseInt(req.params.index)
     if (!req.file) return res.status(400).json({ success: false, error: 'No file provided' })
-    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/events')
+    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/events', req.file.originalname)
     const url = result.secure_url
     const doc = await Content.findOne({ key: 'main' })
     if (doc && doc.data?.eventsPage?.events?.[index] !== undefined) {
@@ -485,11 +540,65 @@ app.delete('/api/upload/hero/:index', async (req, res) => {
   }
 })
 
+// ── About Foundation Images (index 0-2: Mission, Vision, Values) ──
+app.post('/api/upload/about-foundation/:index', upload.single('image'), handleUploadError, async (req, res) => {
+  try {
+    const index = parseInt(req.params.index)
+    if (isNaN(index) || index < 0 || index > 2)
+      return res.status(400).json({ success: false, error: 'index must be 0, 1, or 2' })
+    if (!req.file)
+      return res.status(400).json({ success: false, error: 'No file provided' })
+    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/about', req.file.originalname)
+    const url = result.secure_url
+    const doc = await Content.findOne({ key: 'main' })
+    if (doc) {
+      if (!doc.data.about) doc.data.about = {}
+      const imgs = Array.isArray(doc.data.about.foundationImages)
+        ? [...doc.data.about.foundationImages]
+        : [null, null, null]
+      imgs[index] = url
+      doc.data.about.foundationImages = imgs
+      doc.markModified('data')
+      await doc.save()
+    }
+    res.json({ success: true, url })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+// ── About Why-Us Images (index 0-5) ──
+app.post('/api/upload/about-why/:index', upload.single('image'), handleUploadError, async (req, res) => {
+  try {
+    const index = parseInt(req.params.index)
+    if (isNaN(index) || index < 0 || index > 5)
+      return res.status(400).json({ success: false, error: 'index must be 0–5' })
+    if (!req.file)
+      return res.status(400).json({ success: false, error: 'No file provided' })
+    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/about', req.file.originalname)
+    const url = result.secure_url
+    const doc = await Content.findOne({ key: 'main' })
+    if (doc) {
+      if (!doc.data.about) doc.data.about = {}
+      const imgs = Array.isArray(doc.data.about.whyImages)
+        ? [...doc.data.about.whyImages]
+        : [null, null, null, null, null, null]
+      imgs[index] = url
+      doc.data.about.whyImages = imgs
+      doc.markModified('data')
+      await doc.save()
+    }
+    res.json({ success: true, url })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
 // ─────────────────────────────────────────────
 //  TRANSFORMATION IMAGE UPLOAD
 // ─────────────────────────────────────────────
 
-app.post('/api/upload/transformation', upload.single('image'), async (req, res) => {
+app.post('/api/upload/transformation', upload.single('image'), handleUploadError, async (req, res) => {
   try {
     const index     = parseInt(req.body.index)
     const imageType = req.body.imageType
@@ -497,7 +606,7 @@ app.post('/api/upload/transformation', upload.single('image'), async (req, res) 
       return res.status(400).json({ success: false, error: 'No file provided' })
     if (!['before', 'after'].includes(imageType))
       return res.status(400).json({ success: false, error: 'imageType must be "before" or "after"' })
-    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/transformations')
+    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/transformations', req.file.originalname)
     const url = result.secure_url
     const doc = await Content.findOne({ key: 'main' })
     if (doc) {
@@ -555,10 +664,7 @@ const defaultContent = {
     secondaryBtn: 'Learn More',
     backgroundImages: [],
   },
-  logo: {
-    emblemIcon: '🏋️',
-    image: null,
-  },
+  logo: { emblemIcon: '🏋️', image: null },
   stats: [
     { num: '5K+',  label: 'Active Members' },
     { num: '120+', label: 'Weekly Classes' },
@@ -591,6 +697,8 @@ const defaultContent = {
     mission: 'To empower individuals to reach their full potential through comprehensive fitness programs.',
     vision:  'To be the leading fitness destination where everyone feels welcome and motivated.',
     values:  'Excellence, community, integrity, and dedication to every member.',
+    foundationImages: [null, null, null],
+    whyImages:        [null, null, null, null, null, null],
   },
   classesPage: {
     title: 'Our Classes',
@@ -610,10 +718,7 @@ const defaultContent = {
       { name: 'Emma Davis',     specialty: 'Yoga & Flexibility',      exp: '10 years', photo: null },
     ],
   },
-  equipmentPage: {
-    title: 'Gym Equipment',
-    subtitle: 'State-of-the-art equipment from leading brands',
-  },
+  equipmentPage: { title: 'Gym Equipment', subtitle: 'State-of-the-art equipment from leading brands' },
   eventsPage: {
     title: 'Upcoming Events',
     subtitle: 'Join our community events, challenges, and workshops',

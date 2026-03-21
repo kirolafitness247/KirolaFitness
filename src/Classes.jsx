@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { getContent } from './contentStore'
 import Header from './Header'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://kirolafitness.onrender.com/api'
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;900&family=Barlow+Condensed:wght@400;600;700&display=swap');

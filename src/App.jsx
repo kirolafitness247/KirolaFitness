@@ -13,7 +13,7 @@ import Terms from './Terms'
 import Contact from './Contact'
 import { getContent, fetchContent } from './contentStore'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://kirolafitness.onrender.com'
 
 function sharpUrl(url) {
   if (!url || typeof url !== 'string') return url
@@ -884,7 +884,6 @@ function HomePage() {
           ))}
         </ul>
         <div className="nav-right">
-          <button className="heart-btn" onClick={() => setLiked(l => !l)}>{liked ? '❤️' : '🤍'}</button>
           <button className={`hamburger${menuOpen ? ' open' : ''}`} onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
             <span /><span /><span />
           </button>

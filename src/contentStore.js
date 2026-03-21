@@ -4,7 +4,7 @@
 //                       A local in-memory cache avoids repeated fetches.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://kirolafitness.onrender.com/api'
 
 // ── In-memory cache ──
 let _cache = null
