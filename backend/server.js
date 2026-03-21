@@ -79,14 +79,10 @@ const Review = mongoose.model('Review', ReviewSchema)
 
 // ─────────────────────────────────────────────
 //  MULTER — Accept ALL image formats
-//  Covers: jpg, jpeg, png, gif, webp, bmp,
-//          tiff, tif, svg, avif, heic, heif,
-//          ico, jfif — anything image/*
 // ─────────────────────────────────────────────
 
 const ALLOWED_MIME_PREFIXES = ['image/']
 
-// Also allow by extension in case browser sends wrong MIME
 const ALLOWED_EXTENSIONS = new Set([
   '.jpg', '.jpeg', '.png', '.gif', '.webp',
   '.bmp', '.tiff', '.tif', '.svg', '.avif',
@@ -97,12 +93,8 @@ const ALLOWED_EXTENSIONS = new Set([
 function imageFileFilter(req, file, cb) {
   const mime = (file.mimetype || '').toLowerCase()
   const ext  = path.extname(file.originalname || '').toLowerCase()
-
   const mimeOk = ALLOWED_MIME_PREFIXES.some(p => mime.startsWith(p))
   const extOk  = ALLOWED_EXTENSIONS.has(ext)
-
-  // Accept if EITHER mime type OR extension matches
-  // (some mobile browsers send 'application/octet-stream' for HEIC/HEIF)
   if (mimeOk || extOk) {
     cb(null, true)
   } else {
@@ -112,11 +104,10 @@ function imageFileFilter(req, file, cb) {
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 }, // raised to 20 MB to handle RAW/HEIC
+  limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: imageFileFilter,
 })
 
-// ── Global multer error handler ──
 function handleUploadError(err, req, res, next) {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE')
@@ -127,32 +118,21 @@ function handleUploadError(err, req, res, next) {
   next()
 }
 
-// ── Helper: upload buffer to Cloudinary ──
-// Cloudinary auto-detects format from buffer — no need to specify format.
-// We pass resource_type: 'image' and let Cloudinary handle conversion.
 function uploadToCloudinary(buffer, folder = 'gym-website', originalName = '') {
   return new Promise((resolve, reject) => {
     const options = {
       folder,
-      resource_type: 'image',   // Cloudinary auto-detects format
-      quality: 'auto:best',     // best quality, auto-optimised
+      resource_type: 'image',
+      quality: 'auto:best',
       flags: 'preserve_transparency',
-      // For HEIC/HEIF from iPhone — Cloudinary converts automatically
-      // No format override needed; Cloudinary serves best format per browser
     }
-
-    // If SVG, keep as vector
     const ext = path.extname(originalName || '').toLowerCase()
-    if (ext === '.svg') {
-      options.resource_type = 'image'
-      delete options.quality // SVGs don't need quality setting
-    }
+    if (ext === '.svg') delete options.quality
 
     const stream = cloudinary.uploader.upload_stream(options,
       (err, result) => {
         if (err) return reject(err)
         if (result?.secure_url) {
-          // Ensure max quality in URL (no accidental re-compression)
           result.secure_url = result.secure_url
             .replace('/upload/', '/upload/q_auto:best/')
             .replace('/q_auto:best/q_auto:best/', '/q_auto:best/')
@@ -196,7 +176,6 @@ app.patch('/api/content', async (req, res) => {
     const { path, value } = req.body
     const doc = await Content.findOne({ key: 'main' })
     if (!doc) return res.status(404).json({ success: false, error: 'Content not found' })
-
     const data = doc.data
     const keys = path.split('.')
     let obj = data
@@ -205,7 +184,6 @@ app.patch('/api/content', async (req, res) => {
       obj = obj[keys[i]]
     }
     obj[keys[keys.length - 1]] = value
-
     doc.markModified('data')
     await doc.save()
     res.json({ success: true, data: doc.data })
@@ -225,36 +203,24 @@ app.post('/api/registrations', async (req, res) => {
       return res.status(400).json({ success: false, error: 'name, phone and eventTitle are required' })
     const reg = await Registration.create({ name, phone, eventTitle, eventDate, eventCat })
     res.status(201).json({ success: true, data: reg })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.get('/api/registrations', async (req, res) => {
   try {
     const regs = await Registration.find().sort({ createdAt: -1 }).lean()
     res.json({ success: true, data: regs })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.delete('/api/registrations/:id', async (req, res) => {
-  try {
-    await Registration.findByIdAndDelete(req.params.id)
-    res.json({ success: true })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  try { await Registration.findByIdAndDelete(req.params.id); res.json({ success: true }) }
+  catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.delete('/api/registrations', async (req, res) => {
-  try {
-    await Registration.deleteMany({})
-    res.json({ success: true })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  try { await Registration.deleteMany({}); res.json({ success: true }) }
+  catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 // ─────────────────────────────────────────────
@@ -268,36 +234,24 @@ app.post('/api/class-bookings', async (req, res) => {
       return res.status(400).json({ success: false, error: 'name, phone and className are required' })
     const booking = await ClassBooking.create({ name, phone, className, trainer, time, level })
     res.status(201).json({ success: true, data: booking })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.get('/api/class-bookings', async (req, res) => {
   try {
     const bookings = await ClassBooking.find().sort({ createdAt: -1 }).lean()
     res.json({ success: true, data: bookings })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.delete('/api/class-bookings/:id', async (req, res) => {
-  try {
-    await ClassBooking.findByIdAndDelete(req.params.id)
-    res.json({ success: true })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  try { await ClassBooking.findByIdAndDelete(req.params.id); res.json({ success: true }) }
+  catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.delete('/api/class-bookings', async (req, res) => {
-  try {
-    await ClassBooking.deleteMany({})
-    res.json({ success: true })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  try { await ClassBooking.deleteMany({}); res.json({ success: true }) }
+  catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 // ─────────────────────────────────────────────
@@ -311,36 +265,24 @@ app.post('/api/members', async (req, res) => {
       return res.status(400).json({ success: false, error: 'name, email and phone are required' })
     const member = await MemberRegistration.create({ name, email, phone })
     res.status(201).json({ success: true, data: member })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.get('/api/members', async (req, res) => {
   try {
     const members = await MemberRegistration.find().sort({ createdAt: -1 }).lean()
     res.json({ success: true, data: members })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.delete('/api/members/:id', async (req, res) => {
-  try {
-    await MemberRegistration.findByIdAndDelete(req.params.id)
-    res.json({ success: true })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  try { await MemberRegistration.findByIdAndDelete(req.params.id); res.json({ success: true }) }
+  catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.delete('/api/members', async (req, res) => {
-  try {
-    await MemberRegistration.deleteMany({})
-    res.json({ success: true })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  try { await MemberRegistration.deleteMany({}); res.json({ success: true }) }
+  catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 // ─────────────────────────────────────────────
@@ -356,27 +298,21 @@ app.post('/api/reviews', async (req, res) => {
       return res.status(400).json({ success: false, error: 'rating must be between 1 and 5' })
     const review = await Review.create({ name, rating: Number(rating), message, approved: true })
     res.status(201).json({ success: true, data: review })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.get('/api/reviews', async (req, res) => {
   try {
     const reviews = await Review.find({ approved: true }).sort({ createdAt: -1 }).lean()
     res.json({ success: true, data: reviews })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.get('/api/reviews/all', async (req, res) => {
   try {
     const reviews = await Review.find().sort({ createdAt: -1 }).lean()
     res.json({ success: true, data: reviews })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.patch('/api/reviews/:id/approve', async (req, res) => {
@@ -384,9 +320,7 @@ app.patch('/api/reviews/:id/approve', async (req, res) => {
     const review = await Review.findByIdAndUpdate(req.params.id, { approved: true }, { new: true })
     if (!review) return res.status(404).json({ success: false, error: 'Review not found' })
     res.json({ success: true, data: review })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.patch('/api/reviews/:id/unapprove', async (req, res) => {
@@ -394,18 +328,12 @@ app.patch('/api/reviews/:id/unapprove', async (req, res) => {
     const review = await Review.findByIdAndUpdate(req.params.id, { approved: false }, { new: true })
     if (!review) return res.status(404).json({ success: false, error: 'Review not found' })
     res.json({ success: true, data: review })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.delete('/api/reviews/:id', async (req, res) => {
-  try {
-    await Review.findByIdAndDelete(req.params.id)
-    res.json({ success: true })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  try { await Review.findByIdAndDelete(req.params.id); res.json({ success: true }) }
+  catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 // ─────────────────────────────────────────────
@@ -425,9 +353,7 @@ app.post('/api/upload/logo', upload.single('image'), handleUploadError, async (r
       await doc.save()
     }
     res.json({ success: true, url })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.post('/api/upload/hero', upload.array('images', 20), handleUploadError, async (req, res) => {
@@ -447,9 +373,7 @@ app.post('/api/upload/hero', upload.array('images', 20), handleUploadError, asyn
       await doc.save()
     }
     res.json({ success: true, urls })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.post('/api/upload/class/:index', upload.single('image'), handleUploadError, async (req, res) => {
@@ -465,9 +389,7 @@ app.post('/api/upload/class/:index', upload.single('image'), handleUploadError, 
       await doc.save()
     }
     res.json({ success: true, url })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.post('/api/upload/trainer/:index', upload.single('image'), handleUploadError, async (req, res) => {
@@ -483,9 +405,7 @@ app.post('/api/upload/trainer/:index', upload.single('image'), handleUploadError
       await doc.save()
     }
     res.json({ success: true, url })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.post('/api/upload/home-class/:index', upload.single('image'), handleUploadError, async (req, res) => {
@@ -501,9 +421,7 @@ app.post('/api/upload/home-class/:index', upload.single('image'), handleUploadEr
       await doc.save()
     }
     res.json({ success: true, url })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.post('/api/upload/event/:index', upload.single('image'), handleUploadError, async (req, res) => {
@@ -519,9 +437,7 @@ app.post('/api/upload/event/:index', upload.single('image'), handleUploadError, 
       await doc.save()
     }
     res.json({ success: true, url })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.delete('/api/upload/hero/:index', async (req, res) => {
@@ -535,63 +451,7 @@ app.delete('/api/upload/hero/:index', async (req, res) => {
       await doc.save()
     }
     res.json({ success: true })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
-})
-
-// ── About Foundation Images (index 0-2: Mission, Vision, Values) ──
-app.post('/api/upload/about-foundation/:index', upload.single('image'), handleUploadError, async (req, res) => {
-  try {
-    const index = parseInt(req.params.index)
-    if (isNaN(index) || index < 0 || index > 2)
-      return res.status(400).json({ success: false, error: 'index must be 0, 1, or 2' })
-    if (!req.file)
-      return res.status(400).json({ success: false, error: 'No file provided' })
-    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/about', req.file.originalname)
-    const url = result.secure_url
-    const doc = await Content.findOne({ key: 'main' })
-    if (doc) {
-      if (!doc.data.about) doc.data.about = {}
-      const imgs = Array.isArray(doc.data.about.foundationImages)
-        ? [...doc.data.about.foundationImages]
-        : [null, null, null]
-      imgs[index] = url
-      doc.data.about.foundationImages = imgs
-      doc.markModified('data')
-      await doc.save()
-    }
-    res.json({ success: true, url })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
-})
-
-// ── About Why-Us Images (index 0-5) ──
-app.post('/api/upload/about-why/:index', upload.single('image'), handleUploadError, async (req, res) => {
-  try {
-    const index = parseInt(req.params.index)
-    if (isNaN(index) || index < 0 || index > 5)
-      return res.status(400).json({ success: false, error: 'index must be 0–5' })
-    if (!req.file)
-      return res.status(400).json({ success: false, error: 'No file provided' })
-    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/about', req.file.originalname)
-    const url = result.secure_url
-    const doc = await Content.findOne({ key: 'main' })
-    if (doc) {
-      if (!doc.data.about) doc.data.about = {}
-      const imgs = Array.isArray(doc.data.about.whyImages)
-        ? [...doc.data.about.whyImages]
-        : [null, null, null, null, null, null]
-      imgs[index] = url
-      doc.data.about.whyImages = imgs
-      doc.markModified('data')
-      await doc.save()
-    }
-    res.json({ success: true, url })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 // ─────────────────────────────────────────────
@@ -624,9 +484,7 @@ app.post('/api/upload/transformation', upload.single('image'), handleUploadError
       }
     }
     res.json({ success: true, url })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 app.delete('/api/upload/transformation/:index/:imageType', async (req, res) => {
@@ -646,9 +504,7 @@ app.delete('/api/upload/transformation/:index/:imageType', async (req, res) => {
       }
     }
     res.json({ success: true })
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
-  }
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
 // ─────────────────────────────────────────────
@@ -691,14 +547,13 @@ const defaultContent = {
     copyright: '© 2025 GYM — All Rights Reserved',
     links: ['Privacy', 'Terms', 'Contact', 'Instagram'],
   },
+  // About page — text only, no images
   about: {
     title: 'About Our Gym',
     subtitle: 'Founded in 2010, transforming lives through fitness',
     mission: 'To empower individuals to reach their full potential through comprehensive fitness programs.',
     vision:  'To be the leading fitness destination where everyone feels welcome and motivated.',
     values:  'Excellence, community, integrity, and dedication to every member.',
-    foundationImages: [null, null, null],
-    whyImages:        [null, null, null, null, null, null],
   },
   classesPage: {
     title: 'Our Classes',

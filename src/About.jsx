@@ -9,6 +9,7 @@ const styles = `
   :root { --dark: #0a0d1a; --darker: #060810; --gold: #c9a84c; --white: #ffffff; --muted: #8a9ab5; }
   body { background: var(--dark); color: var(--white); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
 
+  /* ── Page Header ── */
   .page-header {
     padding: 140px 80px 80px;
     background: var(--darker);
@@ -32,7 +33,7 @@ const styles = `
     color: var(--muted);
   }
 
-  /* ── Section wrapper ── */
+  /* ── Section ── */
   .section { padding: 80px 80px; }
   .section-label {
     font-family: 'Barlow Condensed', sans-serif;
@@ -48,81 +49,95 @@ const styles = `
     font-size: clamp(34px, 5vw, 64px);
     line-height: 1;
     color: var(--white);
-    margin-bottom: 56px;
+    margin-bottom: 40px;
   }
 
-  /* ── Zigzag row ── */
+  /* ── Text rows — no images ── */
   .zz-row {
     display: flex;
-    align-items: center;
-    gap: 64px;
-    margin-bottom: 72px;
-  }
-  .zz-row:last-child { margin-bottom: 0; }
-  .zz-row.reverse { flex-direction: row-reverse; }
-
-  .zz-img-wrap {
-    flex: 0 0 42%;
-    max-width: 42%;
+    align-items: stretch;
+    margin-bottom: 2px;
     border-radius: 4px;
     overflow: hidden;
-    position: relative;
+    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.02);
+    transition: background 0.2s, border-color 0.2s;
   }
-  .zz-img-wrap img {
-    width: 100%;
-    height: 320px;
-    object-fit: cover;
-    display: block;
+  .zz-row:hover {
+    background: rgba(201,168,76,0.04);
+    border-color: rgba(201,168,76,0.14);
   }
-  /* Placeholder when no real image */
-  .zz-img-placeholder {
-    width: 100%;
-    height: 320px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 4px;
+  .zz-row:last-child { margin-bottom: 0; }
+
+  /* Alternating accent rows */
+  .zz-row.alt {
+    background: rgba(201,168,76,0.03);
+    border-color: rgba(201,168,76,0.08);
   }
-  .zz-img-placeholder .placeholder-icon { font-size: 52px; opacity: 0.18; }
-  .zz-img-placeholder .placeholder-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.15);
+  .zz-row.alt:hover {
+    background: rgba(201,168,76,0.07);
   }
 
-  .zz-text { flex: 1; }
-  .zz-icon {
-    font-size: 36px;
-    margin-bottom: 14px;
-    display: block;
-    line-height: 1;
+  /* Row number badge */
+  .zz-num {
+    flex: 0 0 76px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 44px;
+    letter-spacing: 1px;
+    color: rgba(201,168,76,0.13);
+    background: rgba(201,168,76,0.04);
+    border-right: 1px solid rgba(201,168,76,0.1);
+    flex-shrink: 0;
   }
+  .zz-row.alt .zz-num {
+    color: rgba(201,168,76,0.22);
+    background: rgba(201,168,76,0.07);
+    border-right-color: rgba(201,168,76,0.18);
+  }
+
+  /* Icon column */
+  .zz-icon-col {
+    flex: 0 0 68px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 34px;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+
+  /* Text body */
+  .zz-body {
+    flex: 1;
+    padding: 30px 40px 30px 4px;
+    min-width: 0;
+  }
+
   .zz-title {
     font-family: 'Bebas Neue', cursive;
-    font-size: clamp(26px, 3vw, 40px);
-    letter-spacing: 1px;
+    font-size: clamp(20px, 2.2vw, 30px);
+    letter-spacing: 1.5px;
     color: var(--white);
-    margin-bottom: 16px;
+    margin-bottom: 10px;
   }
-  .zz-desc {
-    font-size: 15px;
-    line-height: 1.8;
-    color: var(--muted);
-    max-width: 480px;
-  }
+
   .zz-accent {
     display: block;
-    width: 40px;
+    width: 32px;
     height: 2px;
     background: var(--gold);
-    margin: 20px 0;
+    margin-bottom: 14px;
     border-radius: 1px;
+  }
+
+  .zz-desc {
+    font-size: 15px;
+    line-height: 1.85;
+    color: var(--muted);
+    max-width: 680px;
   }
 
   /* ── CTA ── */
@@ -187,35 +202,32 @@ const styles = `
   @media (max-width: 860px) {
     .page-header { padding: 96px 20px 40px; }
     .section { padding: 52px 20px; }
-    .zz-row,
-    .zz-row.reverse { flex-direction: column; gap: 32px; }
-    .zz-img-wrap { flex: none; max-width: 100%; width: 100%; }
-    .zz-img-wrap img { height: 220px; }
-    .zz-img-placeholder { height: 200px; }
-    .zz-desc { max-width: 100%; }
+    .zz-num { flex: 0 0 50px; font-size: 30px; }
+    .zz-icon-col { flex: 0 0 44px; font-size: 20px; padding-top: 26px; }
+    .zz-body { padding: 22px 16px 22px 0; }
+    .zz-desc { font-size: 14px; }
     .cta-section { flex-direction: column; align-items: flex-start; padding: 52px 20px; gap: 24px; }
     .cta-section .btn-dark { width: 100%; text-align: center; }
     .footer { padding: 28px 20px; flex-direction: column; align-items: flex-start; }
     .footer-links { gap: 14px; }
-    .section-title { margin-bottom: 36px; }
+    .section-title { margin-bottom: 28px; }
+  }
+
+  @media (max-width: 480px) {
+    .zz-num { display: none; }
+    .zz-icon-col { flex: 0 0 36px; padding-top: 20px; }
+    .zz-body { padding: 18px 12px 18px 0; }
   }
 `
 
-// Foundation items — icon, title, desc pulled from CMS; images are placeholders
-// (swap src strings for real image URLs if you have them)
-const foundationImages = [null, null, null]
-
 const whyUs = [
-  { icon: '👥', title: 'Expert Trainers',    desc: '40+ certified professionals with years of real-world coaching experience, ready to guide every step of your fitness journey.' },
-  { icon: '🏋️', title: 'Modern Equipment',   desc: 'The latest fitness technology from top global brands — maintained daily so you never have a reason to hold back.' },
-  { icon: '⏰', title: 'Flexible Hours',     desc: 'Open 24 hours a day, 7 days a week. Your schedule is never an excuse — train whenever it fits your life.' },
-  { icon: '📊', title: 'Progress Tracking',  desc: 'Advanced analytics and body-composition tools help you see real numbers, not guesswork, at every milestone.' },
-  { icon: '🤝', title: 'Community',          desc: '5,000+ active members who motivate, challenge, and celebrate each other — because transformation is better together.' },
-  { icon: '📚', title: 'Education',          desc: 'Regular workshops on nutrition, recovery, and mindset give you the knowledge to stay fit for life, not just for a season.' },
+  { icon: '👥', title: 'Expert Trainers',    desc: '40+ certified professionals with years of real-world coaching experience, ready to guide every step of your fitness journey — from your first session to your biggest milestone.' },
+  { icon: '🏋️', title: 'Modern Equipment',   desc: 'The latest fitness technology from top global brands, maintained daily so you never have a reason to hold back. Every machine, every rack, every tool — purpose-built for performance.' },
+  { icon: '⏰', title: 'Flexible Hours',     desc: 'Open 24 hours a day, 7 days a week. Your schedule is never an excuse — train at 6 AM before work, or midnight after a long shift. We are always here for you.' },
+  { icon: '📊', title: 'Progress Tracking',  desc: 'Advanced analytics and body-composition tools help you see real numbers, not guesswork, at every milestone. Know exactly where you started and how far you have come.' },
+  { icon: '🤝', title: 'Community',          desc: '5,000+ active members who motivate, challenge, and celebrate each other — because transformation is better together. Our community is the secret ingredient most gyms are missing.' },
+  { icon: '📚', title: 'Education',          desc: 'Regular workshops on nutrition, recovery, and mindset give you the knowledge to stay fit for life, not just for a season. Understand your body and train smarter, not just harder.' },
 ]
-
-// Placeholder image visuals keyed by icon
-const whyImages = [null, null, null, null, null, null]
 
 export default function About() {
   const navigate  = useNavigate()
@@ -236,17 +248,16 @@ export default function About() {
     { icon: '💪', title: 'Our Values',  desc: about.values  || '' },
   ]
 
-  const ImgOrPlaceholder = ({ src, icon, label }) => (
-    <div className="zz-img-wrap">
-      {src
-        ? <img src={src} alt={label} />
-        : (
-          <div className="zz-img-placeholder">
-            <span className="placeholder-icon">{icon}</span>
-            <span className="placeholder-label">{label}</span>
-          </div>
-        )
-      }
+  // Single reusable row — number badge + icon + title + gold line + paragraph
+  const Row = ({ icon, title, desc, index }) => (
+    <div className={`zz-row${index % 2 === 1 ? ' alt' : ''}`}>
+      <div className="zz-num">{String(index + 1).padStart(2, '0')}</div>
+      <div className="zz-icon-col">{icon}</div>
+      <div className="zz-body">
+        <h3 className="zz-title">{title}</h3>
+        <span className="zz-accent" />
+        <p className="zz-desc">{desc}</p>
+      </div>
     </div>
   )
 
@@ -266,47 +277,21 @@ export default function About() {
         <p>{about.subtitle || ''}</p>
       </div>
 
-      {/* ── Foundation zigzag ── */}
+      {/* ── Foundation ── */}
       <section className="section" style={{ background: 'var(--darker)' }}>
         <p className="section-label">Our Foundation</p>
         <h2 className="section-title">What Drives Us</h2>
-
         {foundation.map((item, i) => (
-          <div key={i} className={`zz-row${i % 2 === 1 ? ' reverse' : ''}`}>
-            <ImgOrPlaceholder
-              src={foundationImages[i]}
-              icon={item.icon}
-              label={item.title}
-            />
-            <div className="zz-text">
-              <span className="zz-icon">{item.icon}</span>
-              <h3 className="zz-title">{item.title}</h3>
-              <span className="zz-accent" />
-              <p className="zz-desc">{item.desc}</p>
-            </div>
-          </div>
+          <Row key={i} icon={item.icon} title={item.title} desc={item.desc} index={i} />
         ))}
       </section>
 
-      {/* ── Why Us zigzag ── */}
+      {/* ── Why Us ── */}
       <section className="section" style={{ background: 'var(--dark)' }}>
         <p className="section-label">Why Choose Us</p>
         <h2 className="section-title">What Makes Us Different</h2>
-
         {whyUs.map((item, i) => (
-          <div key={i} className={`zz-row${i % 2 === 1 ? ' reverse' : ''}`}>
-            <ImgOrPlaceholder
-              src={whyImages[i]}
-              icon={item.icon}
-              label={item.title}
-            />
-            <div className="zz-text">
-              <span className="zz-icon">{item.icon}</span>
-              <h3 className="zz-title">{item.title}</h3>
-              <span className="zz-accent" />
-              <p className="zz-desc">{item.desc}</p>
-            </div>
-          </div>
+          <Row key={i} icon={item.icon} title={item.title} desc={item.desc} index={i} />
         ))}
       </section>
 

@@ -11,9 +11,6 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://kirolafitness.onrender
 const TF_CATEGORIES = ['Weight Loss', 'Muscle Gain', 'Body Recomp', 'Strength', 'Endurance']
 
 // ── Accept every image format on every device/OS ──
-// iOS Safari: needs explicit MIME types (image/heic, image/heif) for Camera Roll
-// Android Chrome: needs explicit extensions (.heic, .webp, .avif)
-// Windows/macOS: works with both
 const IMG_ACCEPT = [
   'image/jpeg','image/jpg','image/png','image/gif','image/webp',
   'image/svg+xml','image/bmp','image/tiff','image/avif',
@@ -59,11 +56,8 @@ export default function Manager() {
   }
   const deleteAllRegistrations = async () => {
     if (!window.confirm(`Delete ALL ${registrations.length} registrations? This cannot be undone.`)) return
-    try {
-      await fetch(`${API_BASE}/registrations`, { method: 'DELETE' })
-      setRegistrations([])
-      showToast('✓ All registrations removed')
-    } catch { showToast('✗ Failed to remove all', '#e74c3c') }
+    try { await fetch(`${API_BASE}/registrations`, { method: 'DELETE' }); setRegistrations([]); showToast('✓ All registrations removed') }
+    catch { showToast('✗ Failed to remove all', '#e74c3c') }
   }
 
   const fetchClassBookings = async () => {
@@ -79,11 +73,8 @@ export default function Manager() {
   }
   const deleteAllClassBookings = async () => {
     if (!window.confirm(`Delete ALL ${classBookings.length} bookings? This cannot be undone.`)) return
-    try {
-      await fetch(`${API_BASE}/class-bookings`, { method: 'DELETE' })
-      setClassBookings([])
-      showToast('✓ All bookings removed')
-    } catch { showToast('✗ Failed to remove all', '#e74c3c') }
+    try { await fetch(`${API_BASE}/class-bookings`, { method: 'DELETE' }); setClassBookings([]); showToast('✓ All bookings removed') }
+    catch { showToast('✗ Failed to remove all', '#e74c3c') }
   }
 
   const fetchMembers = async () => {
@@ -99,11 +90,8 @@ export default function Manager() {
   }
   const deleteAllMembers = async () => {
     if (!window.confirm(`Delete ALL ${members.length} members? This cannot be undone.`)) return
-    try {
-      await fetch(`${API_BASE}/members`, { method: 'DELETE' })
-      setMembers([])
-      showToast('✓ All members removed')
-    } catch { showToast('✗ Failed to remove all', '#e74c3c') }
+    try { await fetch(`${API_BASE}/members`, { method: 'DELETE' }); setMembers([]); showToast('✓ All members removed') }
+    catch { showToast('✗ Failed to remove all', '#e74c3c') }
   }
 
   useEffect(() => { fetchContent().then(data => setContent(data)) }, [])
@@ -206,22 +194,6 @@ export default function Manager() {
     finally { setLK(key, false) }
   }
 
-  // ── About page image uploads ──
-  const handleAboutFoundationImg = async (e, index) => {
-    const file = e.target.files[0]; e.target.value = ''; if (!file) return
-    const key = `about-foundation-${index}`; setLK(key, true)
-    try { await rawUpload(`/upload/about-foundation/${index}`, file); await refresh(); showToast('✓ Foundation image uploaded') }
-    catch (err) { showToast('✗ Upload failed: ' + err.message, '#e74c3c') }
-    finally { setLK(key, false) }
-  }
-  const handleAboutWhyImg = async (e, index) => {
-    const file = e.target.files[0]; e.target.value = ''; if (!file) return
-    const key = `about-why-${index}`; setLK(key, true)
-    try { await rawUpload(`/upload/about-why/${index}`, file); await refresh(); showToast('✓ Why Us image uploaded') }
-    catch (err) { showToast('✗ Upload failed: ' + err.message, '#e74c3c') }
-    finally { setLK(key, false) }
-  }
-
   const addTransformation = async () => {
     const fresh = await fetchContent(); const existing = fresh.transformationsPage?.transformations || []
     const newItem = { name: '', category: 'Weight Loss', duration: '', quote: '', story: '', beforeImage: null, afterImage: null }
@@ -281,21 +253,9 @@ export default function Manager() {
   const heroImages = content.hero?.backgroundImages || []
   const tfPage = content.transformationsPage || {}
   const transformations = tfPage.transformations || []
-  const foundationImages = content.about?.foundationImages || [null, null, null]
-  const whyImages        = content.about?.whyImages        || [null, null, null, null, null, null]
-
-  const WHY_LABELS = [
-    { icon: '👥', title: 'Expert Trainers'   },
-    { icon: '🏋️', title: 'Modern Equipment'  },
-    { icon: '⏰', title: 'Flexible Hours'    },
-    { icon: '📊', title: 'Progress Tracking' },
-    { icon: '🤝', title: 'Community'         },
-    { icon: '📚', title: 'Education'         },
-  ]
 
   const Spinner = () => <span style={{display:'inline-block',width:14,height:14,border:'2px solid rgba(255,255,255,0.3)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin 0.7s linear infinite',marginRight:6}} />
 
-  // ── UploadThumb uses IMG_ACCEPT ──
   const UploadThumb = ({ src, onUpload, onRemove, loadKey, label = 'Upload Photo' }) => (
     <div style={{marginBottom:8}}>
       {src ? (
@@ -333,7 +293,6 @@ export default function Manager() {
     </span>
   )
 
-  // ── TfImageUpload uses IMG_ACCEPT ──
   const TfImageUpload = ({ src, loadKey, onUpload, onRemove, label }) => (
     <div style={{flex:1}}>
       <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:3,fontWeight:700,textTransform:'uppercase',color:label==='BEFORE'?'rgba(138,154,181,0.9)':'rgba(201,168,76,0.9)',marginBottom:6,display:'flex',alignItems:'center',gap:6}}>
@@ -363,36 +322,6 @@ export default function Manager() {
     <div style={{padding:'10px 14px',background:'rgba(46,204,113,0.06)',border:'1px solid rgba(46,204,113,0.2)',borderRadius:4,marginBottom:20,fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,letterSpacing:1,color:'rgba(46,204,113,0.8)',lineHeight:1.6}}>
       <strong style={{letterSpacing:3,textTransform:'uppercase',display:'block',marginBottom:2}}>✓ Any Image Format Accepted</strong>
       JPG · PNG · WEBP · HEIC · AVIF · GIF · BMP · SVG — uploaded raw, no compression.
-    </div>
-  )
-
-  const AboutRowEditor = ({ icon, title, textContent, imgSrc, loadKey, onTextBlur, onImgUpload, onImgRemove, rowIndex }) => (
-    <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:6,padding:'20px',marginBottom:16}}>
-      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
-        <span style={{fontSize:22}}>{icon}</span>
-        <div>
-          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:16,color:'var(--white)',letterSpacing:1}}>{title}</div>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:3,color:'rgba(201,168,76,0.6)',textTransform:'uppercase'}}>
-            Row {rowIndex + 1} · {rowIndex % 2 === 0 ? 'Image Left' : 'Image Right'}
-          </div>
-        </div>
-      </div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,alignItems:'start'}}>
-        <div>
-          <label className="form-label" style={{display:'block',marginBottom:8}}>Row Image <StorageBadge type="cloudinary" /></label>
-          <UploadThumb src={imgSrc} loadKey={loadKey} label={`Upload ${title} Image`} onUpload={onImgUpload} onRemove={onImgRemove} />
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:1,color:'rgba(255,255,255,0.18)',marginTop:6,lineHeight:1.5}}>
-            Shown on the {rowIndex % 2 === 0 ? 'left' : 'right'} side of the zigzag row.<br/>
-            If empty, a placeholder icon is shown instead.
-          </div>
-        </div>
-        <div>
-          <div className="form-group">
-            <label className="form-label">Paragraph Text</label>
-            <textarea className="form-textarea" defaultValue={textContent} onBlur={onTextBlur} rows={5} style={{minHeight:120}} placeholder={`Describe your ${title.toLowerCase()} here…`} />
-          </div>
-        </div>
-      </div>
     </div>
   )
 
@@ -579,43 +508,55 @@ export default function Manager() {
             </div>
           )}
 
-          {/* ── ABOUT PAGE ── */}
+          {/* ── ABOUT PAGE — text only, no images ── */}
           {activeSection==='about' && (
             <div className="section-card">
               <div className="section-header">
                 <div className="section-title">About Page</div>
-                <div className="section-desc">Text → MongoDB · Images → Cloudinary · Zigzag layout</div>
+                <div className="section-desc">All text — stored in MongoDB · No images on this page</div>
               </div>
-              <QualityBanner />
+
+              {/* Page header */}
               <div style={{background:'rgba(201,168,76,0.04)',border:'1px solid rgba(201,168,76,0.12)',borderRadius:6,padding:'20px 20px 8px',marginBottom:24}}>
                 <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:4,fontWeight:700,textTransform:'uppercase',color:'rgba(201,168,76,0.7)',marginBottom:16}}>Page Header</div>
                 <div className="form-group"><label className="form-label">Title</label><input className="form-input" defaultValue={content.about?.title||''} onBlur={e => handleUpdate('about.title',e.target.value)} /></div>
                 <div className="form-group"><label className="form-label">Subtitle</label><input className="form-input" defaultValue={content.about?.subtitle||''} onBlur={e => handleUpdate('about.subtitle',e.target.value)} /></div>
               </div>
+
+              {/* Foundation rows — text only */}
               <div style={{background:'rgba(201,168,76,0.04)',border:'1px solid rgba(201,168,76,0.12)',borderRadius:6,padding:'20px',marginBottom:24}}>
-                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:4,fontWeight:700,textTransform:'uppercase',color:'rgba(201,168,76,0.7)',marginBottom:4}}>What Drives Us — Foundation Rows</div>
-                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:1,color:'rgba(255,255,255,0.2)',marginBottom:16}}>Each row shows as image + paragraph side by side (alternating left/right)</div>
-                <AboutRowEditor icon="🎯" title="Our Mission" rowIndex={0} textContent={content.about?.mission||''} imgSrc={foundationImages[0]} loadKey="about-foundation-0" onTextBlur={e => handleUpdate('about.mission',e.target.value)} onImgUpload={e => handleAboutFoundationImg(e,0)} onImgRemove={() => { const imgs=[...foundationImages]; imgs[0]=null; handleUpdate('about.foundationImages',imgs) }} />
-                <AboutRowEditor icon="👁️" title="Our Vision" rowIndex={1} textContent={content.about?.vision||''} imgSrc={foundationImages[1]} loadKey="about-foundation-1" onTextBlur={e => handleUpdate('about.vision',e.target.value)} onImgUpload={e => handleAboutFoundationImg(e,1)} onImgRemove={() => { const imgs=[...foundationImages]; imgs[1]=null; handleUpdate('about.foundationImages',imgs) }} />
-                <AboutRowEditor icon="💪" title="Our Values" rowIndex={2} textContent={content.about?.values||''} imgSrc={foundationImages[2]} loadKey="about-foundation-2" onTextBlur={e => handleUpdate('about.values',e.target.value)} onImgUpload={e => handleAboutFoundationImg(e,2)} onImgRemove={() => { const imgs=[...foundationImages]; imgs[2]=null; handleUpdate('about.foundationImages',imgs) }} />
-              </div>
-              <div style={{background:'rgba(201,168,76,0.04)',border:'1px solid rgba(201,168,76,0.12)',borderRadius:6,padding:'20px',marginBottom:8}}>
-                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:4,fontWeight:700,textTransform:'uppercase',color:'rgba(201,168,76,0.7)',marginBottom:4}}>What Makes Us Different — Why Us Rows</div>
-                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:1,color:'rgba(255,255,255,0.2)',marginBottom:16}}>Images for the 6 "Why Choose Us" zigzag rows.</div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-                  {WHY_LABELS.map((item,i) => (
-                    <div key={i} style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:6,padding:'14px'}}>
-                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-                        <span style={{fontSize:18}}>{item.icon}</span>
-                        <div>
-                          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:14,color:'var(--white)',letterSpacing:1}}>{item.title}</div>
-                          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:2,color:'rgba(201,168,76,0.5)',textTransform:'uppercase'}}>Row {i+1} · {i%2===0?'Img Left':'Img Right'}</div>
-                        </div>
-                      </div>
-                      <UploadThumb src={whyImages[i]} loadKey={`about-why-${i}`} label="Upload Photo" onUpload={e => handleAboutWhyImg(e,i)} onRemove={() => { const imgs=[...whyImages]; imgs[i]=null; handleUpdate('about.whyImages',imgs) }} />
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:4,fontWeight:700,textTransform:'uppercase',color:'rgba(201,168,76,0.7)',marginBottom:4}}>What Drives Us</div>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:1,color:'rgba(255,255,255,0.2)',marginBottom:20}}>These three paragraphs appear as numbered rows on the About page</div>
+
+                {[
+                  { key: 'mission', icon: '🎯', label: 'Our Mission' },
+                  { key: 'vision',  icon: '👁️', label: 'Our Vision'  },
+                  { key: 'values',  icon: '💪', label: 'Our Values'  },
+                ].map((item, i) => (
+                  <div key={i} style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:6,padding:'16px',marginBottom:12}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                      <span style={{fontSize:18}}>{item.icon}</span>
+                      <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:15,color:'var(--white)',letterSpacing:1}}>{item.label}</div>
+                      <div style={{marginLeft:'auto',fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:2,color:'rgba(201,168,76,0.4)',textTransform:'uppercase'}}>Row {i+1}</div>
                     </div>
-                  ))}
-                </div>
+                    <textarea
+                      className="form-textarea"
+                      defaultValue={content.about?.[item.key]||''}
+                      onBlur={e => handleUpdate(`about.${item.key}`, e.target.value)}
+                      rows={3}
+                      style={{minHeight:72}}
+                      placeholder={`Enter ${item.label.toLowerCase()} paragraph here…`}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Info note about Why Us */}
+              <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:6,padding:'16px'}}>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:4,fontWeight:700,textTransform:'uppercase',color:'rgba(255,255,255,0.3)',marginBottom:8}}>Why Choose Us Section</div>
+                <p style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,letterSpacing:1,color:'rgba(255,255,255,0.25)',lineHeight:1.6}}>
+                  The 6 "Why Choose Us" rows (Expert Trainers, Modern Equipment, Flexible Hours, Progress Tracking, Community, Education) are hardcoded in the About component with fixed text. To change their content, edit the <code style={{background:'rgba(255,255,255,0.05)',padding:'1px 5px',borderRadius:2,fontFamily:'monospace',fontSize:10}}>whyUs</code> array directly in <code style={{background:'rgba(255,255,255,0.05)',padding:'1px 5px',borderRadius:2,fontFamily:'monospace',fontSize:10}}>About.jsx</code>.
+                </p>
               </div>
             </div>
           )}
