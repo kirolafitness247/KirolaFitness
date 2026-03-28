@@ -10,7 +10,6 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://kirolafitness.onrender
 
 const TF_CATEGORIES = ['Weight Loss', 'Muscle Gain', 'Body Recomp', 'Strength', 'Endurance']
 
-// ── Accept every image format on every device/OS ──
 const IMG_ACCEPT = [
   'image/jpeg','image/jpg','image/png','image/gif','image/webp',
   'image/svg+xml','image/bmp','image/tiff','image/avif',
@@ -121,6 +120,68 @@ export default function Manager() {
     const keys = path.split('.'); const fresh = await fetchContent(); let obj = fresh
     for (const k of keys) obj = obj[k]
     await updateContent(path, obj.filter((_, i) => i !== index)); setContent(getContent()); window.dispatchEvent(new Event('contentUpdated')); showToast('✓ Item Removed')
+  }
+
+  // ── Equipment helpers ──
+  const addEquipmentCategory = async () => {
+    const fresh = await fetchContent()
+    const cats = fresh.equipmentPage?.categories || []
+    await updateContent('equipmentPage.categories', [...cats, { cat: 'New Category', image: null, items: [] }])
+    await refresh(); showToast('✓ Category added')
+  }
+  const removeEquipmentCategory = async (catIdx) => {
+    if (!window.confirm('Remove this category and all its items?')) return
+    const fresh = await fetchContent()
+    const cats = (fresh.equipmentPage?.categories || []).filter((_, i) => i !== catIdx)
+    await updateContent('equipmentPage.categories', cats)
+    await refresh(); showToast('✓ Category removed')
+  }
+  const updateEquipmentCategory = async (catIdx, field, value) => {
+    const fresh = await fetchContent()
+    const cats = [...(fresh.equipmentPage?.categories || [])]
+    cats[catIdx] = { ...cats[catIdx], [field]: value }
+    await updateContent('equipmentPage.categories', cats)
+    setContent(getContent()); window.dispatchEvent(new Event('contentUpdated'))
+  }
+  const addEquipmentItem = async (catIdx) => {
+    const fresh = await fetchContent()
+    const cats = [...(fresh.equipmentPage?.categories || [])]
+    const items = [...(cats[catIdx]?.items || []), { name: 'New Item', brand: 'Brand', count: '1 unit', image: null }]
+    cats[catIdx] = { ...cats[catIdx], items }
+    await updateContent('equipmentPage.categories', cats)
+    await refresh(); showToast('✓ Item added')
+  }
+  const removeEquipmentItem = async (catIdx, itemIdx) => {
+    const fresh = await fetchContent()
+    const cats = [...(fresh.equipmentPage?.categories || [])]
+    cats[catIdx] = { ...cats[catIdx], items: cats[catIdx].items.filter((_, i) => i !== itemIdx) }
+    await updateContent('equipmentPage.categories', cats)
+    await refresh(); showToast('✓ Item removed')
+  }
+  const updateEquipmentItem = async (catIdx, itemIdx, field, value) => {
+    const fresh = await fetchContent()
+    const cats = [...(fresh.equipmentPage?.categories || [])]
+    const items = [...(cats[catIdx]?.items || [])]
+    items[itemIdx] = { ...items[itemIdx], [field]: value }
+    cats[catIdx] = { ...cats[catIdx], items }
+    await updateContent('equipmentPage.categories', cats)
+    setContent(getContent()); window.dispatchEvent(new Event('contentUpdated'))
+  }
+
+  // ── Equipment image upload handlers ──
+  const handleEquipmentCategoryImg = async (e, catIdx) => {
+    const file = e.target.files[0]; e.target.value = ''; if (!file) return
+    const key = `eqcat-${catIdx}`; setLK(key, true)
+    try { await rawUpload(`/upload/equipment-category/${catIdx}`, file); await refresh(); showToast('✓ Category image uploaded') }
+    catch (err) { showToast('✗ Upload failed: ' + err.message, '#e74c3c') }
+    finally { setLK(key, false) }
+  }
+  const handleEquipmentItemImg = async (e, catIdx, itemIdx) => {
+    const file = e.target.files[0]; e.target.value = ''; if (!file) return
+    const key = `eqitem-${catIdx}-${itemIdx}`; setLK(key, true)
+    try { await rawUpload(`/upload/equipment-item/${catIdx}/${itemIdx}`, file); await refresh(); showToast('✓ Equipment image uploaded') }
+    catch (err) { showToast('✗ Upload failed: ' + err.message, '#e74c3c') }
+    finally { setLK(key, false) }
   }
 
   const handleHeroImagesUpload = async (e) => {
@@ -243,6 +304,7 @@ export default function Manager() {
     { id: 'about',           label: '📖 About Page' },
     { id: 'classesPage',     label: '🎓 Classes Page' },
     { id: 'trainersPage',    label: '👥 Trainers Page' },
+    { id: 'equipmentPage',   label: '🏋️ Equipment Page' },
     { id: 'transformations', label: '🏆 Transformations' },
     { id: 'eventsPage',      label: '📅 Events Page' },
     { id: 'registrations',   label: '📋 Event Registrations' },
@@ -253,6 +315,8 @@ export default function Manager() {
   const heroImages = content.hero?.backgroundImages || []
   const tfPage = content.transformationsPage || {}
   const transformations = tfPage.transformations || []
+  const equipmentPage = content.equipmentPage || {}
+  const equipmentCategories = equipmentPage.categories || []
 
   const Spinner = () => <span style={{display:'inline-block',width:14,height:14,border:'2px solid rgba(255,255,255,0.3)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin 0.7s linear infinite',marginRight:6}} />
 
@@ -269,6 +333,24 @@ export default function Manager() {
           <input type="file" accept={IMG_ACCEPT} onChange={onUpload} disabled={loading[loadKey]} style={{position:'absolute',inset:0,opacity:0,cursor:'pointer'}} />
           {loading[loadKey] ? <Spinner /> : <span style={{fontSize:24,opacity:0.4}}>📸</span>}
           <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,letterSpacing:2,fontWeight:700,textTransform:'uppercase',color:'rgba(201,168,76,0.7)'}}>{loading[loadKey] ? 'Uploading...' : label}</span>
+        </label>
+      )}
+    </div>
+  )
+
+  // ── Compact inline image uploader used inside the equipment item table rows ──
+  const InlineImgUpload = ({ src, loadKey, onUpload, onRemove }) => (
+    <div style={{width:64,flexShrink:0}}>
+      {src ? (
+        <div style={{position:'relative',width:64,height:48}}>
+          <img src={src} alt="eq" style={{width:64,height:48,objectFit:'cover',borderRadius:4,display:'block',border:'1px solid rgba(201,168,76,0.3)'}} />
+          <button onClick={onRemove} style={{position:'absolute',top:2,right:2,background:'rgba(231,76,60,0.85)',border:'none',color:'#fff',borderRadius:2,padding:'1px 5px',cursor:'pointer',fontSize:10,fontWeight:700,lineHeight:1}}>✕</button>
+        </div>
+      ) : (
+        <label style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3,width:64,height:48,border:'1px dashed rgba(201,168,76,0.3)',borderRadius:4,cursor:loading[loadKey]?'wait':'pointer',background:'rgba(201,168,76,0.03)',position:'relative',opacity:loading[loadKey]?0.7:1}}>
+          <input type="file" accept={IMG_ACCEPT} onChange={onUpload} disabled={loading[loadKey]} style={{position:'absolute',inset:0,opacity:0,cursor:'pointer'}} />
+          {loading[loadKey] ? <Spinner /> : <span style={{fontSize:16,opacity:0.4}}>📸</span>}
+          <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:8,letterSpacing:1,fontWeight:700,textTransform:'uppercase',color:'rgba(201,168,76,0.6)',textAlign:'center',lineHeight:1}}>{loading[loadKey]?'…':'Photo'}</span>
         </label>
       )}
     </div>
@@ -508,26 +590,21 @@ export default function Manager() {
             </div>
           )}
 
-          {/* ── ABOUT PAGE — text only, no images ── */}
+          {/* ── ABOUT PAGE ── */}
           {activeSection==='about' && (
             <div className="section-card">
               <div className="section-header">
                 <div className="section-title">About Page</div>
                 <div className="section-desc">All text — stored in MongoDB · No images on this page</div>
               </div>
-
-              {/* Page header */}
               <div style={{background:'rgba(201,168,76,0.04)',border:'1px solid rgba(201,168,76,0.12)',borderRadius:6,padding:'20px 20px 8px',marginBottom:24}}>
                 <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:4,fontWeight:700,textTransform:'uppercase',color:'rgba(201,168,76,0.7)',marginBottom:16}}>Page Header</div>
                 <div className="form-group"><label className="form-label">Title</label><input className="form-input" defaultValue={content.about?.title||''} onBlur={e => handleUpdate('about.title',e.target.value)} /></div>
                 <div className="form-group"><label className="form-label">Subtitle</label><input className="form-input" defaultValue={content.about?.subtitle||''} onBlur={e => handleUpdate('about.subtitle',e.target.value)} /></div>
               </div>
-
-              {/* Foundation rows — text only */}
               <div style={{background:'rgba(201,168,76,0.04)',border:'1px solid rgba(201,168,76,0.12)',borderRadius:6,padding:'20px',marginBottom:24}}>
                 <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:4,fontWeight:700,textTransform:'uppercase',color:'rgba(201,168,76,0.7)',marginBottom:4}}>What Drives Us</div>
                 <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:1,color:'rgba(255,255,255,0.2)',marginBottom:20}}>These three paragraphs appear as numbered rows on the About page</div>
-
                 {[
                   { key: 'mission', icon: '🎯', label: 'Our Mission' },
                   { key: 'vision',  icon: '👁️', label: 'Our Vision'  },
@@ -539,24 +616,9 @@ export default function Manager() {
                       <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:15,color:'var(--white)',letterSpacing:1}}>{item.label}</div>
                       <div style={{marginLeft:'auto',fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:2,color:'rgba(201,168,76,0.4)',textTransform:'uppercase'}}>Row {i+1}</div>
                     </div>
-                    <textarea
-                      className="form-textarea"
-                      defaultValue={content.about?.[item.key]||''}
-                      onBlur={e => handleUpdate(`about.${item.key}`, e.target.value)}
-                      rows={3}
-                      style={{minHeight:72}}
-                      placeholder={`Enter ${item.label.toLowerCase()} paragraph here…`}
-                    />
+                    <textarea className="form-textarea" defaultValue={content.about?.[item.key]||''} onBlur={e => handleUpdate(`about.${item.key}`, e.target.value)} rows={3} style={{minHeight:72}} placeholder={`Enter ${item.label.toLowerCase()} paragraph here…`} />
                   </div>
                 ))}
-              </div>
-
-              {/* Info note about Why Us */}
-              <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:6,padding:'16px'}}>
-                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:4,fontWeight:700,textTransform:'uppercase',color:'rgba(255,255,255,0.3)',marginBottom:8}}>Why Choose Us Section</div>
-                <p style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,letterSpacing:1,color:'rgba(255,255,255,0.25)',lineHeight:1.6}}>
-                  The 6 "Why Choose Us" rows (Expert Trainers, Modern Equipment, Flexible Hours, Progress Tracking, Community, Education) are hardcoded in the About component with fixed text. To change their content, edit the <code style={{background:'rgba(255,255,255,0.05)',padding:'1px 5px',borderRadius:2,fontFamily:'monospace',fontSize:10}}>whyUs</code> array directly in <code style={{background:'rgba(255,255,255,0.05)',padding:'1px 5px',borderRadius:2,fontFamily:'monospace',fontSize:10}}>About.jsx</code>.
-                </p>
               </div>
             </div>
           )}
@@ -619,11 +681,130 @@ export default function Manager() {
                         ))}
                       </div>
                     )}
-                    <div style={{marginTop:6,fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:1,color:'rgba(255,255,255,0.2)'}}>These badges will appear on the trainer's card on the public Trainers page.</div>
                   </div>
                 </div>
               ))}
               <AddBtn label="Add New Trainer" onClick={() => addArrayItem('trainersPage.trainers',{name:'New Trainer',specialty:'Fitness & Conditioning',exp:'1 year',photo:null,certifications:[]})} />
+            </div>
+          )}
+
+          {/* ── EQUIPMENT PAGE ── */}
+          {activeSection==='equipmentPage' && (
+            <div className="section-card">
+              <div className="section-header">
+                <div className="section-title">🏋️ Equipment Page</div>
+                <div className="section-desc">Images → Cloudinary · Text → MongoDB</div>
+              </div>
+              <QualityBanner />
+
+              {/* Page-level fields */}
+              <div style={{background:'rgba(201,168,76,0.04)',border:'1px solid rgba(201,168,76,0.12)',borderRadius:6,padding:'20px 20px 8px',marginBottom:28}}>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:4,fontWeight:700,textTransform:'uppercase',color:'rgba(201,168,76,0.7)',marginBottom:16}}>Page Settings</div>
+                <div className="form-group">
+                  <label className="form-label">Page Subtitle</label>
+                  <input className="form-input" defaultValue={equipmentPage.subtitle||''} onBlur={e => handleUpdate('equipmentPage.subtitle', e.target.value)} placeholder="e.g. State-of-the-art equipment from leading brands" />
+                </div>
+              </div>
+
+              {/* Categories */}
+              {equipmentCategories.length === 0 && (
+                <div style={{textAlign:'center',padding:'40px 0',border:'1px dashed rgba(255,255,255,0.07)',borderRadius:6,marginBottom:16}}>
+                  <div style={{fontSize:36,opacity:0.1,marginBottom:12}}>🏋️</div>
+                  <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:22,color:'rgba(255,255,255,0.1)',letterSpacing:2}}>No Categories Yet</div>
+                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,letterSpacing:2,color:'rgba(255,255,255,0.15)',marginTop:6}}>Add a category below to get started</div>
+                </div>
+              )}
+
+              {equipmentCategories.map((cat, catIdx) => (
+                <div key={catIdx} className="array-item" style={{marginBottom:24}}>
+                  {/* Category header */}
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:28,color:'rgba(201,168,76,0.15)',lineHeight:1}}>{String(catIdx+1).padStart(2,'0')}</span>
+                      <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:18,color:'var(--white)',letterSpacing:1}}>{cat.cat||'Unnamed Category'}</div>
+                      <span style={{background:'rgba(201,168,76,0.1)',color:'#c9a84c',padding:'2px 10px',borderRadius:3,fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,letterSpacing:1}}>{(cat.items||[]).length} item{(cat.items||[]).length!==1?'s':''}</span>
+                    </div>
+                    <RemoveBtn onClick={() => removeEquipmentCategory(catIdx)} />
+                  </div>
+
+                  {/* Category name */}
+                  <div className="form-group">
+                    <label className="form-label">Category Name</label>
+                    <input className="form-input" defaultValue={cat.cat||''} onBlur={e => updateEquipmentCategory(catIdx,'cat',e.target.value)} placeholder="e.g. Cardio, Strength, Free Weights…" />
+                  </div>
+
+                  {/* Category cover image */}
+                  <div className="form-group">
+                    <label className="form-label">Category Cover Image <StorageBadge type="cloudinary" /></label>
+                    <UploadThumb
+                      src={cat.image}
+                      loadKey={`eqcat-${catIdx}`}
+                      label="Upload Category Cover"
+                      onUpload={e => handleEquipmentCategoryImg(e, catIdx)}
+                      onRemove={() => updateEquipmentCategory(catIdx, 'image', null)}
+                    />
+                  </div>
+
+                  {/* Items */}
+                  {(cat.items||[]).length > 0 && (
+                    <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:4,overflow:'hidden',marginBottom:8}}>
+                      {/* Table header */}
+                      <div style={{display:'grid',gridTemplateColumns:'64px 1fr 1fr 100px auto',background:'rgba(255,255,255,0.04)',padding:'10px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)',gap:8}}>
+                        {['Photo','Equipment Name','Brand / Model','Count / Units',''].map((h,i) => (
+                          <div key={i} style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:3,fontWeight:700,textTransform:'uppercase',color:'rgba(255,255,255,0.3)'}}>{h}</div>
+                        ))}
+                      </div>
+                      {(cat.items||[]).map((item, itemIdx) => (
+                        <div key={itemIdx} style={{display:'grid',gridTemplateColumns:'64px 1fr 1fr 100px auto',padding:'10px 16px',borderBottom:'1px solid rgba(255,255,255,0.04)',alignItems:'center',gap:8}}>
+                          {/* Item image */}
+                          <InlineImgUpload
+                            src={item.image}
+                            loadKey={`eqitem-${catIdx}-${itemIdx}`}
+                            onUpload={e => handleEquipmentItemImg(e, catIdx, itemIdx)}
+                            onRemove={() => updateEquipmentItem(catIdx, itemIdx, 'image', null)}
+                          />
+                          <input
+                            className="form-input"
+                            style={{margin:0,padding:'8px 10px',fontSize:13}}
+                            defaultValue={item.name||''}
+                            onBlur={e => updateEquipmentItem(catIdx,itemIdx,'name',e.target.value)}
+                            placeholder="Equipment name"
+                          />
+                          <input
+                            className="form-input"
+                            style={{margin:0,padding:'8px 10px',fontSize:13}}
+                            defaultValue={item.brand||''}
+                            onBlur={e => updateEquipmentItem(catIdx,itemIdx,'brand',e.target.value)}
+                            placeholder="Brand / model"
+                          />
+                          <input
+                            className="form-input"
+                            style={{margin:0,padding:'8px 10px',fontSize:13}}
+                            defaultValue={item.count||''}
+                            onBlur={e => updateEquipmentItem(catIdx,itemIdx,'count',e.target.value)}
+                            placeholder="e.g. 4 units"
+                          />
+                          <button
+                            onClick={() => removeEquipmentItem(catIdx,itemIdx)}
+                            style={{background:'rgba(231,76,60,0.1)',border:'1px solid rgba(231,76,60,0.25)',color:'#e74c3c',cursor:'pointer',padding:'6px 10px',borderRadius:3,fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,whiteSpace:'nowrap'}}
+                          >✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => addEquipmentItem(catIdx)}
+                    style={{display:'flex',alignItems:'center',gap:6,background:'rgba(255,255,255,0.03)',border:'1px dashed rgba(255,255,255,0.1)',color:'rgba(255,255,255,0.4)',padding:'9px 16px',borderRadius:3,cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,letterSpacing:2,fontWeight:700,textTransform:'uppercase',width:'100%',justifyContent:'center',marginTop:4,transition:'all 0.2s'}}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(201,168,76,0.3)';e.currentTarget.style.color='rgba(201,168,76,0.7)'}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)';e.currentTarget.style.color='rgba(255,255,255,0.4)'}}
+                  >
+                    + Add Equipment Item
+                  </button>
+                </div>
+              ))}
+
+              <AddBtn label="Add New Category" onClick={addEquipmentCategory} />
             </div>
           )}
 

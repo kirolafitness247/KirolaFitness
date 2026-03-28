@@ -455,6 +455,58 @@ app.delete('/api/upload/hero/:index', async (req, res) => {
 })
 
 // ─────────────────────────────────────────────
+//  EQUIPMENT IMAGE UPLOAD ROUTES  ← NEW
+// ─────────────────────────────────────────────
+
+// Upload a cover image for an equipment category
+app.post('/api/upload/equipment-category/:catIndex', upload.single('image'), handleUploadError, async (req, res) => {
+  try {
+    const catIndex = parseInt(req.params.catIndex)
+    if (!req.file) return res.status(400).json({ success: false, error: 'No file provided' })
+
+    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/equipment/categories', req.file.originalname)
+    const url = result.secure_url
+
+    const doc = await Content.findOne({ key: 'main' })
+    if (doc) {
+      const cats = doc.data?.equipmentPage?.categories
+      if (!cats || cats[catIndex] === undefined)
+        return res.status(404).json({ success: false, error: `Category at index ${catIndex} not found` })
+      cats[catIndex].image = url
+      doc.markModified('data')
+      await doc.save()
+    }
+    res.json({ success: true, url })
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
+})
+
+// Upload a photo for a specific equipment item
+app.post('/api/upload/equipment-item/:catIndex/:itemIndex', upload.single('image'), handleUploadError, async (req, res) => {
+  try {
+    const catIndex  = parseInt(req.params.catIndex)
+    const itemIndex = parseInt(req.params.itemIndex)
+    if (!req.file) return res.status(400).json({ success: false, error: 'No file provided' })
+
+    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/equipment/items', req.file.originalname)
+    const url = result.secure_url
+
+    const doc = await Content.findOne({ key: 'main' })
+    if (doc) {
+      const cats = doc.data?.equipmentPage?.categories
+      if (!cats || cats[catIndex] === undefined)
+        return res.status(404).json({ success: false, error: `Category at index ${catIndex} not found` })
+      const items = cats[catIndex].items
+      if (!items || items[itemIndex] === undefined)
+        return res.status(404).json({ success: false, error: `Item at index ${itemIndex} not found` })
+      items[itemIndex].image = url
+      doc.markModified('data')
+      await doc.save()
+    }
+    res.json({ success: true, url })
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
+})
+
+// ─────────────────────────────────────────────
 //  TRANSFORMATION IMAGE UPLOAD
 // ─────────────────────────────────────────────
 
@@ -547,7 +599,6 @@ const defaultContent = {
     copyright: '© 2025 GYM — All Rights Reserved',
     links: ['Privacy', 'Terms', 'Contact', 'Instagram'],
   },
-  // About page — text only, no images
   about: {
     title: 'About Our Gym',
     subtitle: 'Founded in 2010, transforming lives through fitness',
@@ -573,7 +624,12 @@ const defaultContent = {
       { name: 'Emma Davis',     specialty: 'Yoga & Flexibility',      exp: '10 years', photo: null },
     ],
   },
-  equipmentPage: { title: 'Gym Equipment', subtitle: 'State-of-the-art equipment from leading brands' },
+  // image field added to categories and items
+  equipmentPage: {
+    title: 'Gym Equipment',
+    subtitle: 'State-of-the-art equipment from leading brands',
+    categories: [],
+  },
   eventsPage: {
     title: 'Upcoming Events',
     subtitle: 'Join our community events, challenges, and workshops',
