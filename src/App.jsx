@@ -338,7 +338,7 @@ const styles = `
   .hero-image-side { position: relative; overflow: hidden; }
   .hero-image-side::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to right, rgba(6,8,16,0.0) 55%, rgba(6,8,16,0.85) 100%); z-index: 3; pointer-events: none; }
   .hero-carousel { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; }
-  .hero-carousel-track { display: flex; height: 100%; transition: transform 0.7s ease-in-out; }
+  .hero-carousel-track { display: flex; height: 100%; transition: transform 0.7s ease-in-out; will-change: transform; }
   .hero-carousel-slide { flex: 0 0 100%; width: 100%; height: 100%; position: relative; }
   .hero-carousel-img { width: 100%; height: 100%; object-fit: cover; object-position: center center; display: block; }
   .hero-img-overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(to bottom, rgba(6,8,16,0.15) 0%, transparent 20%); }
