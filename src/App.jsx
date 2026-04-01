@@ -1050,7 +1050,7 @@ function HomePage() {
               if (key === 'privacy') navigate('/privacy')
               else if (key === 'terms') navigate('/terms')
               else if (key === 'contact') navigate('/contact')
-              else if (key === 'instagram') window.open('https://www.instagram.com/kirolafitness', '_blank')
+              else if (key === 'instagram') window.open('https://www.instagram.com/kirola_fitness?igsh=cWdocG5oaHFlcDU0', '_blank')
               else if (key === 'about') navigate('/about')
             }
             return (
@@ -1069,7 +1069,7 @@ function HomePage() {
 }
 
 // ── Manager Password Gate ──
-const MANAGER_PASSWORD = 'WEALLCANDOIT'
+const MANAGER_PASSWORD = 'WEALLCANDOITKIROLA'
 
 function ManagerGate() {
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('mgr_auth') === '1')

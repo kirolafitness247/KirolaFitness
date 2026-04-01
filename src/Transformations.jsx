@@ -297,12 +297,27 @@ export default function Transformations() {
         </button>
       </section>
 
-      {/* ── FOOTER ── */}
       <footer className="footer">
         <p className="footer-copy">{content.footer?.copyright}</p>
         <ul className="footer-links">
-          {(content.footer?.links || []).map((link, i) => <li key={i}><a>{link}</a></li>)}
-          <li><a style={{color:'var(--gold)',cursor:'pointer'}} onClick={() => navigate('/manager')}>⚙ Manager</a></li>
+          {(content.footer?.links || []).map((link, i) => {
+            const key = link.toLowerCase().trim()
+            const handleClick = () => {
+              if (key === 'privacy') navigate('/privacy')
+              else if (key === 'terms') navigate('/terms')
+              else if (key === 'contact') navigate('/contact')
+              else if (key === 'instagram') window.open('https://www.instagram.com/kirola_fitness?igsh=cWdocG5oaHFlcDU0', '_blank')
+              else if (key === 'about') navigate('/about')
+            }
+            return (
+              <li key={i}>
+                <a onClick={handleClick} style={key === 'instagram' ? { color: 'var(--gold)' } : {}}>
+                  {key === 'instagram' ? '📸 ' : ''}{link}
+                </a>
+              </li>
+            )
+          })}
+          <li><a className="manager-link" onClick={() => navigate('/manager')}>⚙ Manager</a></li>
         </ul>
       </footer>
     </>
