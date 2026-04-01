@@ -338,7 +338,6 @@ export default function Manager() {
     </div>
   )
 
-  // ── Compact inline image uploader used inside the equipment item table rows ──
   const InlineImgUpload = ({ src, loadKey, onUpload, onRemove }) => (
     <div style={{width:64,flexShrink:0}}>
       {src ? (
@@ -668,6 +667,28 @@ export default function Manager() {
                     <div className="form-group"><label className="form-label">Specialty</label><input className="form-input" defaultValue={t.specialty} onBlur={e => handleArrayUpdate('trainersPage.trainers',i,'specialty',e.target.value)} /></div>
                     <div className="form-group"><label className="form-label">Experience</label><input className="form-input" defaultValue={t.exp} onBlur={e => handleArrayUpdate('trainersPage.trainers',i,'exp',e.target.value)} /></div>
                   </div>
+
+                  {/* ── Bio / Description field ── */}
+                  <div className="form-group">
+                    <label className="form-label" style={{display:'flex',alignItems:'center',gap:8}}>
+                      Bio / Description
+                      <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:2,padding:'2px 8px',borderRadius:3,background:'rgba(201,168,76,0.1)',color:'rgba(201,168,76,0.6)',fontWeight:700,textTransform:'uppercase'}}>shown in dropdown on site</span>
+                    </label>
+                    <textarea
+                      className="form-textarea"
+                      rows={4}
+                      defaultValue={t.bio||''}
+                      onBlur={e => handleArrayUpdate('trainersPage.trainers',i,'bio',e.target.value)}
+                      placeholder="Write a short bio about this trainer — their background, coaching philosophy, achievements…"
+                      style={{minHeight:96,lineHeight:1.6}}
+                    />
+                    {t.bio && t.bio.trim() && (
+                      <div style={{marginTop:8,padding:'8px 12px',background:'rgba(46,204,113,0.06)',border:'1px solid rgba(46,204,113,0.15)',borderRadius:4,fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:2,color:'rgba(46,204,113,0.7)',textTransform:'uppercase'}}>
+                        ✓ Bio saved — "About Trainer" button will appear on the card
+                      </div>
+                    )}
+                  </div>
+
                   <div className="form-group">
                     <label className="form-label" style={{display:'flex',alignItems:'center',gap:8}}>
                       Certifications
@@ -684,7 +705,7 @@ export default function Manager() {
                   </div>
                 </div>
               ))}
-              <AddBtn label="Add New Trainer" onClick={() => addArrayItem('trainersPage.trainers',{name:'New Trainer',specialty:'Fitness & Conditioning',exp:'1 year',photo:null,certifications:[]})} />
+              <AddBtn label="Add New Trainer" onClick={() => addArrayItem('trainersPage.trainers',{name:'New Trainer',specialty:'Fitness & Conditioning',exp:'1 year',photo:null,certifications:[],bio:''})} />
             </div>
           )}
 
@@ -696,8 +717,6 @@ export default function Manager() {
                 <div className="section-desc">Images → Cloudinary · Text → MongoDB</div>
               </div>
               <QualityBanner />
-
-              {/* Page-level fields */}
               <div style={{background:'rgba(201,168,76,0.04)',border:'1px solid rgba(201,168,76,0.12)',borderRadius:6,padding:'20px 20px 8px',marginBottom:28}}>
                 <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:4,fontWeight:700,textTransform:'uppercase',color:'rgba(201,168,76,0.7)',marginBottom:16}}>Page Settings</div>
                 <div className="form-group">
@@ -705,8 +724,6 @@ export default function Manager() {
                   <input className="form-input" defaultValue={equipmentPage.subtitle||''} onBlur={e => handleUpdate('equipmentPage.subtitle', e.target.value)} placeholder="e.g. State-of-the-art equipment from leading brands" />
                 </div>
               </div>
-
-              {/* Categories */}
               {equipmentCategories.length === 0 && (
                 <div style={{textAlign:'center',padding:'40px 0',border:'1px dashed rgba(255,255,255,0.07)',borderRadius:6,marginBottom:16}}>
                   <div style={{fontSize:36,opacity:0.1,marginBottom:12}}>🏋️</div>
@@ -714,10 +731,8 @@ export default function Manager() {
                   <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,letterSpacing:2,color:'rgba(255,255,255,0.15)',marginTop:6}}>Add a category below to get started</div>
                 </div>
               )}
-
               {equipmentCategories.map((cat, catIdx) => (
                 <div key={catIdx} className="array-item" style={{marginBottom:24}}>
-                  {/* Category header */}
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
                       <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:28,color:'rgba(201,168,76,0.15)',lineHeight:1}}>{String(catIdx+1).padStart(2,'0')}</span>
@@ -726,29 +741,16 @@ export default function Manager() {
                     </div>
                     <RemoveBtn onClick={() => removeEquipmentCategory(catIdx)} />
                   </div>
-
-                  {/* Category name */}
                   <div className="form-group">
                     <label className="form-label">Category Name</label>
                     <input className="form-input" defaultValue={cat.cat||''} onBlur={e => updateEquipmentCategory(catIdx,'cat',e.target.value)} placeholder="e.g. Cardio, Strength, Free Weights…" />
                   </div>
-
-                  {/* Category cover image */}
                   <div className="form-group">
                     <label className="form-label">Category Cover Image <StorageBadge type="cloudinary" /></label>
-                    <UploadThumb
-                      src={cat.image}
-                      loadKey={`eqcat-${catIdx}`}
-                      label="Upload Category Cover"
-                      onUpload={e => handleEquipmentCategoryImg(e, catIdx)}
-                      onRemove={() => updateEquipmentCategory(catIdx, 'image', null)}
-                    />
+                    <UploadThumb src={cat.image} loadKey={`eqcat-${catIdx}`} label="Upload Category Cover" onUpload={e => handleEquipmentCategoryImg(e, catIdx)} onRemove={() => updateEquipmentCategory(catIdx, 'image', null)} />
                   </div>
-
-                  {/* Items */}
                   {(cat.items||[]).length > 0 && (
                     <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:4,overflow:'hidden',marginBottom:8}}>
-                      {/* Table header */}
                       <div style={{display:'grid',gridTemplateColumns:'64px 1fr 1fr 100px auto',background:'rgba(255,255,255,0.04)',padding:'10px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)',gap:8}}>
                         {['Photo','Equipment Name','Brand / Model','Count / Units',''].map((h,i) => (
                           <div key={i} style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:3,fontWeight:700,textTransform:'uppercase',color:'rgba(255,255,255,0.3)'}}>{h}</div>
@@ -756,54 +758,20 @@ export default function Manager() {
                       </div>
                       {(cat.items||[]).map((item, itemIdx) => (
                         <div key={itemIdx} style={{display:'grid',gridTemplateColumns:'64px 1fr 1fr 100px auto',padding:'10px 16px',borderBottom:'1px solid rgba(255,255,255,0.04)',alignItems:'center',gap:8}}>
-                          {/* Item image */}
-                          <InlineImgUpload
-                            src={item.image}
-                            loadKey={`eqitem-${catIdx}-${itemIdx}`}
-                            onUpload={e => handleEquipmentItemImg(e, catIdx, itemIdx)}
-                            onRemove={() => updateEquipmentItem(catIdx, itemIdx, 'image', null)}
-                          />
-                          <input
-                            className="form-input"
-                            style={{margin:0,padding:'8px 10px',fontSize:13}}
-                            defaultValue={item.name||''}
-                            onBlur={e => updateEquipmentItem(catIdx,itemIdx,'name',e.target.value)}
-                            placeholder="Equipment name"
-                          />
-                          <input
-                            className="form-input"
-                            style={{margin:0,padding:'8px 10px',fontSize:13}}
-                            defaultValue={item.brand||''}
-                            onBlur={e => updateEquipmentItem(catIdx,itemIdx,'brand',e.target.value)}
-                            placeholder="Brand / model"
-                          />
-                          <input
-                            className="form-input"
-                            style={{margin:0,padding:'8px 10px',fontSize:13}}
-                            defaultValue={item.count||''}
-                            onBlur={e => updateEquipmentItem(catIdx,itemIdx,'count',e.target.value)}
-                            placeholder="e.g. 4 units"
-                          />
-                          <button
-                            onClick={() => removeEquipmentItem(catIdx,itemIdx)}
-                            style={{background:'rgba(231,76,60,0.1)',border:'1px solid rgba(231,76,60,0.25)',color:'#e74c3c',cursor:'pointer',padding:'6px 10px',borderRadius:3,fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,whiteSpace:'nowrap'}}
-                          >✕</button>
+                          <InlineImgUpload src={item.image} loadKey={`eqitem-${catIdx}-${itemIdx}`} onUpload={e => handleEquipmentItemImg(e, catIdx, itemIdx)} onRemove={() => updateEquipmentItem(catIdx, itemIdx, 'image', null)} />
+                          <input className="form-input" style={{margin:0,padding:'8px 10px',fontSize:13}} defaultValue={item.name||''} onBlur={e => updateEquipmentItem(catIdx,itemIdx,'name',e.target.value)} placeholder="Equipment name" />
+                          <input className="form-input" style={{margin:0,padding:'8px 10px',fontSize:13}} defaultValue={item.brand||''} onBlur={e => updateEquipmentItem(catIdx,itemIdx,'brand',e.target.value)} placeholder="Brand / model" />
+                          <input className="form-input" style={{margin:0,padding:'8px 10px',fontSize:13}} defaultValue={item.count||''} onBlur={e => updateEquipmentItem(catIdx,itemIdx,'count',e.target.value)} placeholder="e.g. 4 units" />
+                          <button onClick={() => removeEquipmentItem(catIdx,itemIdx)} style={{background:'rgba(231,76,60,0.1)',border:'1px solid rgba(231,76,60,0.25)',color:'#e74c3c',cursor:'pointer',padding:'6px 10px',borderRadius:3,fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,whiteSpace:'nowrap'}}>✕</button>
                         </div>
                       ))}
                     </div>
                   )}
-
-                  <button
-                    onClick={() => addEquipmentItem(catIdx)}
-                    style={{display:'flex',alignItems:'center',gap:6,background:'rgba(255,255,255,0.03)',border:'1px dashed rgba(255,255,255,0.1)',color:'rgba(255,255,255,0.4)',padding:'9px 16px',borderRadius:3,cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,letterSpacing:2,fontWeight:700,textTransform:'uppercase',width:'100%',justifyContent:'center',marginTop:4,transition:'all 0.2s'}}
-                    onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(201,168,76,0.3)';e.currentTarget.style.color='rgba(201,168,76,0.7)'}}
-                    onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)';e.currentTarget.style.color='rgba(255,255,255,0.4)'}}
-                  >
+                  <button onClick={() => addEquipmentItem(catIdx)} style={{display:'flex',alignItems:'center',gap:6,background:'rgba(255,255,255,0.03)',border:'1px dashed rgba(255,255,255,0.1)',color:'rgba(255,255,255,0.4)',padding:'9px 16px',borderRadius:3,cursor:'pointer',fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,letterSpacing:2,fontWeight:700,textTransform:'uppercase',width:'100%',justifyContent:'center',marginTop:4,transition:'all 0.2s'}} onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(201,168,76,0.3)';e.currentTarget.style.color='rgba(201,168,76,0.7)'}} onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)';e.currentTarget.style.color='rgba(255,255,255,0.4)'}}>
                     + Add Equipment Item
                   </button>
                 </div>
               ))}
-
               <AddBtn label="Add New Category" onClick={addEquipmentCategory} />
             </div>
           )}

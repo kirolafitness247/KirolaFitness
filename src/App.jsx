@@ -18,13 +18,8 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://kirolafitness.onrender
 function sharpUrl(url) {
   if (!url || typeof url !== 'string') return url
   if (!url.includes('res.cloudinary.com')) return url
-  let u = url.replace(/\/upload\/([^/]*\/)*/, match => {
-    const parts = match.replace('/upload/', '').split('/')
-    const cleaned = parts.filter(p => !p.startsWith('q_') && !p.startsWith('f_')).join('/')
-    return '/upload/' + (cleaned ? cleaned + '/' : '')
-  })
-  u = u.replace('/upload/', '/upload/q_100,f_auto/')
-  return u
+  if (url.includes('/upload/q_') || url.includes('/upload/f_')) return url
+  return url.replace('/upload/', '/upload/q_auto,f_auto/')
 }
 
 const KIROLA_MAPS_URL = "https://www.google.com/maps/place/Kirola+Fitness/@28.5052999,77.0014053,16.06z/data=!4m6!3m5!1s0x390d17b83bded7f1:0x315869c45550fb09!8m2!3d28.5054988!4d77.00482!16s%2Fg%2F11xzqlpxpz?entry=ttu&g_ep=EgoyMDI2MDMxNS4wIKXMDSoASAFQAw%3D%3D"
@@ -443,7 +438,7 @@ const styles = `
   .classes-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 280px 280px; gap: 16px; }
   .class-card { position: relative; overflow: hidden; cursor: pointer; border-radius: 2px; background: #131824; border: 1px solid rgba(255,255,255,0.07); }
   .class-card:first-child { grid-row: span 2; }
-  .class-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; transition: transform 0.5s ease; }
+  .class-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; display: block; transition: transform 0.5s ease; }
   .class-card:hover .class-card-img { transform: scale(1.05); }
   .class-card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(6,8,16,0.95) 0%, rgba(6,8,16,0.2) 55%, transparent 100%); z-index: 1; }
   .class-card-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 22px; z-index: 2; }
@@ -459,7 +454,7 @@ const styles = `
   .tf-teaser-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .tf-mini-card { position: relative; overflow: hidden; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); transition: border-color 0.3s, transform 0.3s; cursor: pointer; }
   .tf-mini-card:hover { border-color: rgba(201,168,76,0.35); transform: translateY(-4px); }
-  .tf-mini-slider { position: relative; width: 100%; aspect-ratio: 4/3; overflow: hidden; background: #0d1020; user-select: none; }
+  .tf-mini-slider { position: relative; width: 100%; aspect-ratio: 3/4; overflow: hidden; background: #0d1020; user-select: none; }
   .tf-mini-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
   .tf-mini-img-after { clip-path: inset(0 50% 0 0); }
   .tf-mini-divider { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--gold); left: 50%; transform: translateX(-50%); z-index: 5; pointer-events: none; }
@@ -939,9 +934,6 @@ function HomePage() {
             <p className="section-label">{content.classesSection?.label || 'What We Offer'}</p>
             <h2 className="section-title" style={{ marginBottom: 0 }}>Our Moments</h2>
           </div>
-          <button className="btn-outline" onClick={() => navigate('/classes')}>
-            {content.classesSection?.buttonText || 'View All'}
-          </button>
         </div>
         <div className="classes-grid">
           {(content.classes || []).map((c, i) => (

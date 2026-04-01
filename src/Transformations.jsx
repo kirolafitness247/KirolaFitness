@@ -34,7 +34,7 @@ const styles = `
   .tf-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); overflow: hidden; transition: border-color 0.3s, transform 0.3s; cursor: pointer; }
   .tf-card:hover { border-color: rgba(201,168,76,0.3); transform: translateY(-4px); }
 
-  .tf-slider-wrap { position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #0d1020; user-select: none; }
+  .tf-slider-wrap { position: relative; width: 100%; aspect-ratio: 3/4; overflow: hidden; background: #0d1020; user-select: none; }
   .tf-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
   .tf-img-after { clip-path: inset(0 50% 0 0); }
   .tf-divider { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--gold); left: 50%; transform: translateX(-50%); z-index: 10; }
@@ -43,7 +43,7 @@ const styles = `
   .tf-label-before, .tf-label-after { position: absolute; top: 14px; z-index: 11; font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; padding: 4px 10px; backdrop-filter: blur(6px); }
   .tf-label-before { left: 14px; background: rgba(6,8,16,0.75); color: var(--muted); border: 1px solid rgba(255,255,255,0.12); }
   .tf-label-after  { right: 14px; background: rgba(201,168,76,0.9); color: var(--darker); }
-  .tf-placeholder { width: 100%; aspect-ratio: 1/1; background: linear-gradient(135deg, #0d1020, #1a1f35); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; }
+  .tf-placeholder { width: 100%; aspect-ratio: 3/4; background: linear-gradient(135deg, #0d1020, #1a1f35); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; }
 
   .tf-card-info { padding: 20px 22px; }
   .tf-card-name { font-family: 'Bebas Neue', cursive; font-size: 24px; color: var(--white); letter-spacing: 1px; margin-bottom: 8px; }

@@ -1,6 +1,6 @@
 ﻿import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { getContent } from './contentStore'
+import { getContent, fetchContent } from './contentStore'
 import Header from './Header'
 
 const styles = `
@@ -18,20 +18,17 @@ const styles = `
   .eq-section.darker { background: var(--darker); }
   .eq-section.dark   { background: var(--dark); }
 
-  /* Category header with optional cover image */
   .cat-header { display: flex; align-items: flex-end; gap: 32px; margin-bottom: 40px; }
-  .cat-cover { width: 160px; height: 110px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(201,168,76,0.2); flex-shrink: 0; }
+  .cat-cover { width: 280px; height: 200px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(201,168,76,0.2); flex-shrink: 0; }
   .cat-text { flex: 1; }
   .section-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 5px; font-weight: 700; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
   .section-title { font-family: 'Bebas Neue', cursive; font-size: clamp(32px, 5vw, 64px); line-height: 1; color: var(--white); }
 
-  /* Equipment grid */
   .eq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px; }
 
-  /* Card with optional image */
   .eq-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); transition: background 0.3s, border-color 0.3s; display: flex; flex-direction: column; overflow: hidden; }
   .eq-card:hover { background: rgba(201,168,76,0.06); border-color: rgba(201,168,76,0.25); }
-  .eq-card-img { width: 100%; height: 160px; object-fit: cover; display: block; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .eq-card-img { width: 100%; height: 160px; object-fit: contain; display: block; border-bottom: 1px solid rgba(255,255,255,0.06); }
   .eq-card-img-placeholder { width: 100%; height: 160px; background: rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.06); }
   .eq-card-img-placeholder span { font-size: 32px; opacity: 0.08; }
   .eq-card-body { padding: 24px 24px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
@@ -50,37 +47,30 @@ const styles = `
 
   .footer { background: var(--darker); padding: 36px 80px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.07); flex-wrap: wrap; gap: 16px; }
   .footer-copy { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
-  .footer-links { display: flex; gap: 24px; list-style: none; flex-wrap: wrap; }
-  .footer-links a { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--muted); text-decoration: none; text-transform: uppercase; transition: color 0.2s; cursor: pointer; }
-  .footer-links a:hover { color: var(--gold); }
-
-  @media (max-width: 860px) {
-    .page-header { padding: 96px 20px 40px; }
-    .eq-section { padding: 52px 20px; }
-    .cat-header { flex-direction: column; align-items: flex-start; gap: 16px; }
-    .cat-cover { width: 100%; height: 180px; }
-    .eq-grid { grid-template-columns: 1fr 1fr; }
-    .cta-section { flex-direction: column; align-items: flex-start; padding: 52px 20px; gap: 24px; }
-    .cta-section .btn-dark { width: 100%; text-align: center; }
-    .footer { padding: 28px 20px; flex-direction: column; align-items: flex-start; }
-  }
-  @media (max-width: 480px) {
-    .eq-grid { grid-template-columns: 1fr; }
-  }
 `
 
 export default function Equipment() {
-  const navigate  = useNavigate()
+  const navigate = useNavigate()
   const [content, setContent] = useState(getContent())
 
   useEffect(() => {
+    // 🔥 FIX: Fetch data from backend on load
+    const loadData = async () => {
+      const data = await fetchContent()
+      setContent(data)
+    }
+
+    loadData()
+
+    // Listen for updates
     const h = () => setContent(getContent())
     window.addEventListener('contentUpdated', h)
+
     return () => window.removeEventListener('contentUpdated', h)
   }, [])
 
   const equipmentPage = content.equipmentPage || {}
-  const categories    = equipmentPage.categories || []
+  const categories = equipmentPage.categories || []
 
   return (
     <>
@@ -100,8 +90,6 @@ export default function Equipment() {
 
       {categories.map((cat, i) => (
         <section key={i} className={`eq-section ${i % 2 === 0 ? 'darker' : 'dark'}`}>
-
-          {/* Category heading — with optional cover image */}
           <div className="cat-header">
             {cat.image && (
               <img src={cat.image} alt={cat.cat} className="cat-cover" />
@@ -112,13 +100,10 @@ export default function Equipment() {
             </div>
           </div>
 
-          {!cat.items?.length ? (
-            <div className="eq-empty">No items in this category yet</div>
-          ) : (
+          {cat.items?.length > 0 && (
             <div className="eq-grid">
               {cat.items.map((item, j) => (
                 <div key={j} className="eq-card">
-                  {/* Per-item image */}
                   {item.image ? (
                     <img src={item.image} alt={item.name} className="eq-card-img" />
                   ) : (
@@ -145,15 +130,13 @@ export default function Equipment() {
           <p className="section-label">See It In Person</p>
           <h2 className="section-title">Equipment Tour<br />Available</h2>
         </div>
-        <button className="btn-dark" onClick={() => navigate('/register')}>Schedule Tour</button>
+        <button className="btn-dark" onClick={() => navigate('/register')}>
+          Schedule Tour
+        </button>
       </section>
 
       <footer className="footer">
         <p className="footer-copy">{content.footer?.copyright}</p>
-        <ul className="footer-links">
-          {(content.footer?.links || []).map((link, i) => <li key={i}><a>{link}</a></li>)}
-          <li><a onClick={() => navigate('/manager')}>⚙ Manager</a></li>
-        </ul>
       </footer>
     </>
   )

@@ -1,6 +1,6 @@
 ﻿import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { getContent } from './contentStore'
+import { getContent , fetchContent } from './contentStore'
 import Header from './Header'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://kirolafitness.onrender.com/api'
@@ -141,10 +141,19 @@ export default function Events() {
   const [modalEvent, setModalEvent] = useState(null)
 
   useEffect(() => {
+    const loadData = async () => {
+      const data = await fetchContent()
+      setContent(data)
+    }
+
+    loadData()
+
     const h = () => setContent(getContent())
     window.addEventListener('contentUpdated', h)
+
     return () => window.removeEventListener('contentUpdated', h)
   }, [])
+
 
   useEffect(() => {
     document.body.style.overflow = modalEvent ? 'hidden' : ''
