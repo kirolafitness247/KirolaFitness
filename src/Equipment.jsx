@@ -47,6 +47,25 @@ const styles = `
 
   .footer { background: var(--darker); padding: 36px 80px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.07); flex-wrap: wrap; gap: 16px; }
   .footer-copy { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+
+  @media (max-width: 768px) {
+    .page-header { padding: 100px 20px 48px; }
+    .eq-section { padding: 48px 20px; }
+    .cat-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .cat-cover { width: 100%; height: 180px; }
+    .eq-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2px; }
+    .eq-card-img { height: 120px; }
+    .eq-card-img-placeholder { height: 120px; }
+    .eq-card-body { padding: 16px; }
+    .eq-card-name { font-size: 18px; }
+    .cta-section { padding: 48px 20px; flex-direction: column; align-items: flex-start; gap: 24px; }
+    .btn-dark { width: 100%; text-align: center; }
+    .footer { padding: 28px 20px; }
+  }
+
+  @media (max-width: 480px) {
+    .eq-grid { grid-template-columns: 1fr 1fr; }
+  }
 `
 
 export default function Equipment() {
@@ -54,7 +73,6 @@ export default function Equipment() {
   const [content, setContent] = useState(getContent())
 
   useEffect(() => {
-    // 🔥 FIX: Fetch data from backend on load
     const loadData = async () => {
       const data = await fetchContent()
       setContent(data)
@@ -62,7 +80,6 @@ export default function Equipment() {
 
     loadData()
 
-    // Listen for updates
     const h = () => setContent(getContent())
     window.addEventListener('contentUpdated', h)
 
