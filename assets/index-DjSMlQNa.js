@@ -678,6 +678,25 @@ Transformations`,z=(A.titleHighlight||"").toLowerCase().trim();return E.split(`
 
   .footer { background: var(--darker); padding: 36px 80px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.07); flex-wrap: wrap; gap: 16px; }
   .footer-copy { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+
+  @media (max-width: 768px) {
+    .page-header { padding: 100px 20px 48px; }
+    .eq-section { padding: 48px 20px; }
+    .cat-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .cat-cover { width: 100%; height: 180px; }
+    .eq-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2px; }
+    .eq-card-img { height: 120px; }
+    .eq-card-img-placeholder { height: 120px; }
+    .eq-card-body { padding: 16px; }
+    .eq-card-name { font-size: 18px; }
+    .cta-section { padding: 48px 20px; flex-direction: column; align-items: flex-start; gap: 24px; }
+    .btn-dark { width: 100%; text-align: center; }
+    .footer { padding: 28px 20px; }
+  }
+
+  @media (max-width: 480px) {
+    .eq-grid { grid-template-columns: 1fr 1fr; }
+  }
 `;function Ab(){const s=yt(),[u,f]=j.useState(he());j.useEffect(()=>{(async()=>{const A=await He();f(A)})();const b=()=>f(he());return window.addEventListener("contentUpdated",b),()=>window.removeEventListener("contentUpdated",b)},[]);const c=u.equipmentPage||{},m=c.categories||[];return n.jsxs(n.Fragment,{children:[n.jsx("style",{children:jb}),n.jsx(vl,{activePage:"EQUIPMENT"}),n.jsxs("div",{className:"page-header",children:[n.jsxs("h1",{children:["Gym ",n.jsx("span",{children:"Equipment"})]}),n.jsx("p",{children:c.subtitle||"State-of-the-art equipment from leading brands"})]}),m.length===0&&n.jsx("section",{className:"eq-section darker",children:n.jsx("div",{className:"eq-empty",children:"No equipment added yet — manage via the Content Manager"})}),m.map((p,b)=>n.jsxs("section",{className:`eq-section ${b%2===0?"darker":"dark"}`,children:[n.jsxs("div",{className:"cat-header",children:[p.image&&n.jsx("img",{src:p.image,alt:p.cat,className:"cat-cover"}),n.jsxs("div",{className:"cat-text",children:[n.jsxs("p",{className:"section-label",children:[p.cat," Equipment"]}),n.jsx("h2",{className:"section-title",children:p.cat})]})]}),p.items?.length>0&&n.jsx("div",{className:"eq-grid",children:p.items.map((A,h)=>n.jsxs("div",{className:"eq-card",children:[A.image?n.jsx("img",{src:A.image,alt:A.name,className:"eq-card-img"}):n.jsx("div",{className:"eq-card-img-placeholder",children:n.jsx("span",{children:"🏋️"})}),n.jsxs("div",{className:"eq-card-body",children:[n.jsxs("div",{className:"eq-card-top",children:[n.jsx("span",{className:"eq-card-name",children:A.name}),n.jsx("span",{className:"eq-badge",children:A.count})]}),n.jsx("span",{className:"eq-brand",children:A.brand})]})]},h))})]},b)),n.jsxs("section",{className:"cta-section",children:[n.jsxs("div",{className:"cta-text",children:[n.jsx("p",{className:"section-label",children:"See It In Person"}),n.jsxs("h2",{className:"section-title",children:["Equipment Tour",n.jsx("br",{}),"Available"]})]}),n.jsx("button",{className:"btn-dark",onClick:()=>s("/register"),children:"Schedule Tour"})]}),n.jsx("footer",{className:"footer",children:n.jsx("p",{className:"footer-copy",children:u.footer?.copyright})})]})}const Rb="https://kirolafitness.onrender.com/api",Nb=`
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;900&family=Barlow+Condensed:wght@400;600;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
