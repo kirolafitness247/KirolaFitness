@@ -1194,7 +1194,7 @@ function ManagerGate() {
 
 export default function App() {
   return (
-    <BrowserRouter basename="/KirolaFitness/">
+    <BrowserRouter basename="/">
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<About />} />
