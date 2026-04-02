@@ -5,6 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>my-project</title>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const path = params.get('path');
+      if (path) {
+        window.history.replaceState(null, '', path);
+      }
+    </script>
     <script type="module" crossorigin src="/assets/index-k9VRK_v4.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-9OlXrjBQ.css">
   </head>
