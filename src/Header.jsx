@@ -5,6 +5,7 @@ import { getContent } from './contentStore'
 const NAV_LINKS = [
   { name: 'HOME',            path: '/' },
   { name: 'ABOUT',           path: '/about' },
+  { name: 'OWNER',           path: '/owner' },
   { name: 'CLASSES',         path: '/classes' },
   { name: 'TRAINERS',        path: '/trainers' },
   { name: 'TRANSFORMATIONS', path: '/transformations' },

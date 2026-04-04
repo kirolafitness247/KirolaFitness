@@ -170,9 +170,6 @@ const styles = `
 
 // Default journey milestones — can be overridden by content manager later
 const DEFAULT_JOURNEY = [
-  { year: '2015', icon: '🏋️', title: 'The Spark', desc: 'Began training with a single-minded obsession — discovering what the human body is truly capable of.' },
-  { year: '2019', icon: '📋', title: 'Certification & Study', desc: 'Earned professional fitness certifications and spent years studying nutrition, biomechanics, and sports psychology.' },
-  { year: '2022', icon: '🏟️', title: 'Kirola Was Born', desc: 'Founded Kirola Fitness with a vision to bring elite-level training to every member regardless of experience.' },
 ]
 
 export default function Owner() {
@@ -298,7 +295,7 @@ export default function Owner() {
             ) : (
               <div className="owner-accent-card">
                 <div className="owner-accent-label">Gym Founded</div>
-                <div className="owner-accent-value">Kirola Fitness<br />Gurugram, 2022</div>
+                <div className="owner-accent-value">Kirola Fitness<br /></div>
               </div>
             )}
           </div>
@@ -358,7 +355,7 @@ export default function Owner() {
 
             {/* Contact / Social Buttons */}
             <div className="owner-contact-strip">
-              <a href="https://www.instagram.com/kirola_fitness?igsh=cWdocG5oaHFlcDU0"
+              <a href="https://www.instagram.com/fitfunda_official?igsh=MXQ2c3lmdTdra3Ryag=="
                 target="_blank" rel="noopener noreferrer"
                 className="owner-contact-btn">
                 📸 Instagram
@@ -376,21 +373,6 @@ export default function Owner() {
         </div>
       </section>
 
-      {/* Journey Section */}
-      <section className="owner-journey">
-        <p className="section-label">The Story</p>
-        <h2 className="section-title">The Journey</h2>
-        <div className="journey-grid">
-          {journey.map((item, i) => (
-            <div className="journey-card" key={i} data-year={item.year}>
-              <div className="journey-icon">{item.icon || '⭐'}</div>
-              <div className="journey-year">{item.year}</div>
-              <h3 className="journey-title">{item.title}</h3>
-              <p className="journey-desc">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* CTA */}
       <section className="owner-cta">
