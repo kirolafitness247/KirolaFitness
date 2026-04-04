@@ -9,7 +9,7 @@ const styles = `
   :root { --dark: #0a0d1a; --darker: #060810; --gold: #c9a84c; --white: #ffffff; --muted: #8a9ab5; }
   body { background: var(--dark); color: var(--white); font-family: 'Barlow', sans-serif; overflow-x: hidden; }
 
-  .page-header { padding: 140px 80px 80px; background: var(--darker); display: flex; flex-direction: column; justify-content: flex-end; }
+  .page-header { padding: 140px 80px 40px; background: var(--darker); display: flex; flex-direction: column; justify-content: flex-end; }
   .page-header h1 { font-family: 'Bebas Neue', cursive; font-size: clamp(44px, 7vw, 96px); line-height: 0.92; letter-spacing: 2px; color: var(--white); margin-bottom: 16px; }
   .page-header h1 span { color: var(--gold); }
   .page-header p { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; letter-spacing: 2px; color: var(--muted); }
@@ -18,8 +18,24 @@ const styles = `
   .eq-section.darker { background: var(--darker); }
   .eq-section.dark   { background: var(--dark); }
 
-  .cat-header { display: flex; align-items: flex-end; gap: 32px; margin-bottom: 40px; }
-  .cat-cover { width: 280px; height: 200px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(201,168,76,0.2); flex-shrink: 0; }
+  .cat-header {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    margin-bottom: 40px;
+  }
+
+  .cat-cover {
+    width: 280px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    object-position: center top;
+    border-radius: 4px;
+    border: 1px solid rgba(201,168,76,0.2);
+    flex-shrink: 0;
+    display: block;
+  }
+
   .cat-text { flex: 1; }
   .section-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 5px; font-weight: 700; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
   .section-title { font-family: 'Bebas Neue', cursive; font-size: clamp(32px, 5vw, 64px); line-height: 1; color: var(--white); }
@@ -52,7 +68,7 @@ const styles = `
     .page-header { padding: 100px 20px 48px; }
     .eq-section { padding: 48px 20px; }
     .cat-header { flex-direction: column; align-items: flex-start; gap: 16px; }
-    .cat-cover { width: 100%; height: 180px; }
+    .cat-cover { width: 100%; aspect-ratio: 3 / 4; object-position: center top; }
     .eq-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2px; }
     .eq-card-img { height: 120px; }
     .eq-card-img-placeholder { height: 120px; }
@@ -112,7 +128,7 @@ export default function Equipment() {
               <img src={cat.image} alt={cat.cat} className="cat-cover" />
             )}
             <div className="cat-text">
-              <p className="section-label">{cat.cat} Equipment</p>
+              <p className="section-label">Category</p>
               <h2 className="section-title">{cat.cat}</h2>
             </div>
           </div>
