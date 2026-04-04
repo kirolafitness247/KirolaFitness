@@ -480,6 +480,24 @@ app.post('/api/upload/equipment-category/:catIndex', upload.single('image'), han
   } catch (err) { res.status(500).json({ success: false, error: err.message }) }
 })
 
+// In your backend routes (similar to /upload/trainer/:index)
+app.post('/api/upload/owner', upload.single('image'), handleUploadError, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, error: 'No file provided' })
+    const result = await uploadToCloudinary(req.file.buffer, 'gym-website/owner', req.file.originalname)
+    const url = result.secure_url
+    const doc = await Content.findOne({ key: 'main' })
+    if (doc) {
+      if (!doc.data.owner) doc.data.owner = {}
+      doc.data.owner.image = url
+      doc.markModified('data')
+      await doc.save()
+    }
+    res.json({ success: true, url })
+  } catch (err) { res.status(500).json({ success: false, error: err.message }) }
+})
+
+
 // Upload a photo for a specific equipment item
 app.post('/api/upload/equipment-item/:catIndex/:itemIndex', upload.single('image'), handleUploadError, async (req, res) => {
   try {

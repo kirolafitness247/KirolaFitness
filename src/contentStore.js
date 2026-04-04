@@ -78,6 +78,34 @@ export const defaultContent = {
     ],
   },
   registerPage: { title: 'Join Our Gym', subtitle: 'Start your fitness journey today' },
+// ── ADD THIS ──
+owner: {
+  name: '',
+  role: 'Founder & Head Trainer',
+  tagline: '',
+  image: '',
+  description: '',
+  philosophy: '',
+  email: '',
+  accentLabel: 'Gym Founded',
+  accentValue: 'Kirola Fitness · Gurugram, 2022',
+  experienceYears: '10+',
+  membersCoached: '500+',
+  certifications: '8',
+  stats: [
+    { num: '10+', label: 'Years Experience' },
+    { num: '500+', label: 'Members Coached' },
+    { num: '8',   label: 'Certifications' },
+  ],
+  journey: [
+    { year: '2015', icon: '🏋️', title: 'The Spark',
+      desc: 'Began training with a single-minded obsession — discovering what the human body is truly capable of.' },
+    { year: '2019', icon: '📋', title: 'Certification & Study',
+      desc: 'Earned professional fitness certifications and spent years studying nutrition, biomechanics, and sports psychology.' },
+    { year: '2022', icon: '🏟️', title: 'Kirola Was Born',
+      desc: 'Founded Kirola Fitness with a vision to bring elite-level training to every member regardless of experience.' },
+  ],
+},
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

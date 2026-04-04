@@ -7,6 +7,7 @@ import Trainers from './Trainers'
 import Transformations from './Transformations'
 import Equipment from './Equipment'
 import Events from './Events'
+import Owner from './Owner'
 import Register from './Register'
 import Privacy from './Privacy'
 import Terms from './Terms'
@@ -807,6 +808,7 @@ function ReviewsSection() {
 const NAV_LINKS = [
   { name: 'HOME',            path: '/' },
   { name: 'ABOUT',           path: '/about' },
+  { name: 'OWNER',           path: '/owner' },
   { name: 'CLASSES',         path: '/classes' },
   { name: 'TRAINERS',        path: '/trainers' },
   { name: 'TRANSFORMATIONS', path: '/transformations' },
@@ -1198,6 +1200,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<About />} />
+        <Route path="/owner" element={<Owner />} />
         <Route path="/classes" element={<Classes />} />
         <Route path="/trainers" element={<Trainers />} />
         <Route path="/transformations" element={<Transformations />} />

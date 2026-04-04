@@ -247,6 +247,13 @@ export default function Manager() {
     catch (err) { showToast('✗ Upload failed: ' + err.message, '#e74c3c') }
     finally { setLK(key, false) }
   }
+  const handleOwnerImgUpload = async (e) => {
+    const file = e.target.files[0]; e.target.value = ''; if (!file) return
+    setLK('owner', true)
+    try { await rawUpload('/upload/owner', file); await refresh(); showToast('✓ Owner photo uploaded') }
+    catch (err) { showToast('✗ Upload failed: ' + err.message, '#e74c3c') }
+    finally { setLK('owner', false) }
+  }
   const handleTransformationImg = async (e, tfIndex, imageType) => {
     const file = e.target.files[0]; e.target.value = ''; if (!file) return
     const key = `tf-${tfIndex}-${imageType}`; setLK(key, true)
@@ -273,6 +280,40 @@ export default function Manager() {
     arr[index] = { ...arr[index], [field]: value }
     await updateContent('transformationsPage', { ...(fresh.transformationsPage || {}), transformations: arr })
     setContent(getContent()); window.dispatchEvent(new Event('contentUpdated'))
+  }
+  const updateOwnerField = async (field, value) => {
+    await updateContent(`owner.${field}`, value)
+    setContent(getContent()); window.dispatchEvent(new Event('contentUpdated'))
+  }
+  
+  const updateOwnerStat = async (i, field, value) => {
+    const fresh = await fetchContent()
+    const stats = [...(fresh.owner?.stats || [])]
+    stats[i] = { ...stats[i], [field]: value }
+    await updateContent('owner.stats', stats)
+    setContent(getContent()); window.dispatchEvent(new Event('contentUpdated'))
+  }
+  
+  const updateOwnerJourney = async (i, field, value) => {
+    const fresh = await fetchContent()
+    const journey = [...(fresh.owner?.journey || [])]
+    journey[i] = { ...journey[i], [field]: value }
+    await updateContent('owner.journey', journey)
+    setContent(getContent()); window.dispatchEvent(new Event('contentUpdated'))
+  }
+  
+  const addOwnerJourneyItem = async () => {
+    const fresh = await fetchContent()
+    const journey = [...(fresh.owner?.journey || []), { year: '', icon: '⭐', title: '', desc: '' }]
+    await updateContent('owner.journey', journey)
+    await refresh(); showToast('✓ Milestone added')
+  }
+  
+  const removeOwnerJourneyItem = async (i) => {
+    const fresh = await fetchContent()
+    const journey = (fresh.owner?.journey || []).filter((_, idx) => idx !== i)
+    await updateContent('owner.journey', journey)
+    await refresh(); showToast('✓ Milestone removed')
   }
   const updateTfMeta = async (field, value) => {
     const fresh = await fetchContent()
@@ -302,6 +343,7 @@ export default function Manager() {
     { id: 'cta',             label: '📢 CTA Banner' },
     { id: 'footer',          label: '📄 Footer' },
     { id: 'about',           label: '📖 About Page' },
+    { id: 'owner',   label: '👑 Owner Profile' }, 
     { id: 'classesPage',     label: '🎓 Classes Page' },
     { id: 'trainersPage',    label: '👥 Trainers Page' },
     { id: 'equipmentPage',   label: '🏋️ Equipment Page' },
@@ -621,6 +663,161 @@ export default function Manager() {
               </div>
             </div>
           )}
+
+          {/* ── OWNER PROFILE ── */}
+{activeSection === 'owner' && (() => {
+  const o = content.owner || {}
+  return (
+    <div className="section-card">
+      <div className="section-header">
+        <div className="section-title">👑 Owner Profile</div>
+        <div className="section-desc">Photo → Cloudinary · All text → MongoDB</div>
+      </div>
+      <QualityBanner />
+
+      {/* Basic Info */}
+      <div className="array-item">
+        <div className="array-item-title">Basic Information</div>
+        <div className="form-grid">
+          <div className="form-group">
+            <label className="form-label">Owner Name</label>
+            <input className="form-input" defaultValue={o.name || ''} placeholder="e.g. Rajesh Kumar"
+              onBlur={e => updateOwnerField('name', e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Role / Title</label>
+            <input className="form-input" defaultValue={o.role || ''} placeholder="Founder & Head Trainer"
+              onBlur={e => updateOwnerField('role', e.target.value)} />
+          </div>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Tagline</label>
+          <input className="form-input" defaultValue={o.tagline || ''} placeholder="e.g. Strength Through Discipline"
+            onBlur={e => updateOwnerField('tagline', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Email (shown as contact button)</label>
+          <input className="form-input" type="email" defaultValue={o.email || ''} placeholder="owner@kirolafitness.com"
+            onBlur={e => updateOwnerField('email', e.target.value)} />
+        </div>
+      </div>
+
+      {/* Profile Photo */}
+      <div className="array-item">
+        <div className="array-item-title">Profile Photo <StorageBadge type="cloudinary" /></div>
+        <UploadThumb
+          src={o.image}
+          loadKey="owner"
+          label="Upload Owner Photo"
+          onUpload={handleOwnerImgUpload}
+          onRemove={() => updateOwnerField('image', null)}
+        />
+      </div>
+
+      {/* Description */}
+      <div className="array-item">
+        <div className="array-item-title">Bio & Philosophy</div>
+        <div className="form-group">
+          <label className="form-label">Description / Bio</label>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:2,color:'rgba(255,255,255,0.2)',marginBottom:8}}>
+            Use a blank line between paragraphs to create separate blocks on the page.
+          </div>
+          <textarea className="form-textarea" rows={6} defaultValue={o.description || ''}
+            placeholder={'Tell your story — your passion for fitness, your journey…\n\nAdd a second paragraph here for more depth.'}
+            style={{ minHeight: 140, lineHeight: 1.7 }}
+            onBlur={e => updateOwnerField('description', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Philosophy / Signature Quote</label>
+          <input className="form-input" defaultValue={o.philosophy || ''}
+            placeholder="e.g. Every rep is a vote for who you want to become."
+            onBlur={e => updateOwnerField('philosophy', e.target.value)} />
+        </div>
+      </div>
+
+      {/* Accent Card */}
+      <div className="array-item">
+        <div className="array-item-title">Gold Accent Card (shown below photo)</div>
+        <div className="form-grid">
+          <div className="form-group">
+            <label className="form-label">Label</label>
+            <input className="form-input" defaultValue={o.accentLabel || ''} placeholder="Gym Founded"
+              onBlur={e => updateOwnerField('accentLabel', e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Value</label>
+            <input className="form-input" defaultValue={o.accentValue || ''} placeholder="Kirola Fitness · 2022"
+              onBlur={e => updateOwnerField('accentValue', e.target.value)} />
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="array-item">
+        <div className="array-item-title">Stats (3 numbers displayed under the name)</div>
+        {(o.stats || [
+          { num: '10+', label: 'Years Experience' },
+          { num: '500+', label: 'Members Coached' },
+          { num: '8', label: 'Certifications' },
+        ]).map((s, i) => (
+          <div key={i} className="form-grid" style={{ marginBottom: 12 }}>
+            <div className="form-group">
+              <label className="form-label">Stat {i + 1} — Number</label>
+              <input className="form-input" defaultValue={s.num} placeholder="10+"
+                onBlur={e => updateOwnerStat(i, 'num', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Label</label>
+              <input className="form-input" defaultValue={s.label} placeholder="Years Experience"
+                onBlur={e => updateOwnerStat(i, 'label', e.target.value)} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Journey Timeline */}
+      <div className="array-item">
+        <div className="array-item-title">Journey Timeline</div>
+        {(o.journey || []).map((item, i) => (
+          <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 4, padding: '16px', marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 10, letterSpacing: 3, fontWeight: 700, textTransform: 'uppercase', color: '#c9a84c' }}>
+                Milestone {i + 1}
+              </span>
+              <RemoveBtn onClick={() => removeOwnerJourneyItem(i)} />
+            </div>
+            <div className="form-grid">
+              <div className="form-group">
+                <label className="form-label">Year</label>
+                <input className="form-input" defaultValue={item.year} placeholder="2022"
+                  onBlur={e => updateOwnerJourney(i, 'year', e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Icon (emoji)</label>
+                <input className="form-input" defaultValue={item.icon} placeholder="🏋️"
+                  onBlur={e => updateOwnerJourney(i, 'icon', e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Title</label>
+                <input className="form-input" defaultValue={item.title} placeholder="Kirola Was Born"
+                  onBlur={e => updateOwnerJourney(i, 'title', e.target.value)} />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Description</label>
+              <textarea className="form-textarea" defaultValue={item.desc} rows={3}
+                placeholder="Describe this milestone…"
+                onBlur={e => updateOwnerJourney(i, 'desc', e.target.value)} />
+            </div>
+          </div>
+        ))}
+        <AddBtn label="Add Milestone" onClick={addOwnerJourneyItem} />
+      </div>
+
+    </div>
+  )
+})()}
+
 
           {/* ── CLASSES PAGE ── */}
           {activeSection==='classesPage' && (
