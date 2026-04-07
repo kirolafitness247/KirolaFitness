@@ -343,7 +343,7 @@ export default function Manager() {
     { id: 'cta',             label: '📢 CTA Banner' },
     { id: 'footer',          label: '📄 Footer' },
     { id: 'about',           label: '📖 About Page' },
-    { id: 'owner',   label: '👑 Owner Profile' }, 
+    { id: 'owner',           label: '👑 Owner Profile' }, 
     { id: 'classesPage',     label: '🎓 Classes Page' },
     { id: 'trainersPage',    label: '👥 Trainers Page' },
     { id: 'equipmentPage',   label: '🏋️ Equipment Page' },
@@ -664,159 +664,134 @@ export default function Manager() {
             </div>
           )}
 
-          {/* ── OWNER PROFILE ── */}
-{activeSection === 'owner' && (() => {
-  const o = content.owner || {}
-  return (
-    <div className="section-card">
-      <div className="section-header">
-        <div className="section-title">👑 Owner Profile</div>
-        <div className="section-desc">Photo → Cloudinary · All text → MongoDB</div>
-      </div>
-      <QualityBanner />
-
-      {/* Basic Info */}
-      <div className="array-item">
-        <div className="array-item-title">Basic Information</div>
-        <div className="form-grid">
-          <div className="form-group">
-            <label className="form-label">Owner Name</label>
-            <input className="form-input" defaultValue={o.name || ''} placeholder="e.g. Rajesh Kumar"
-              onBlur={e => updateOwnerField('name', e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Role / Title</label>
-            <input className="form-input" defaultValue={o.role || ''} placeholder="Founder & Head Trainer"
-              onBlur={e => updateOwnerField('role', e.target.value)} />
-          </div>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Tagline</label>
-          <input className="form-input" defaultValue={o.tagline || ''} placeholder="e.g. Strength Through Discipline"
-            onBlur={e => updateOwnerField('tagline', e.target.value)} />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Email (shown as contact button)</label>
-          <input className="form-input" type="email" defaultValue={o.email || ''} placeholder="owner@kirolafitness.com"
-            onBlur={e => updateOwnerField('email', e.target.value)} />
-        </div>
-      </div>
-
-      {/* Profile Photo */}
-      <div className="array-item">
-        <div className="array-item-title">Profile Photo <StorageBadge type="cloudinary" /></div>
-        <UploadThumb
-          src={o.image}
-          loadKey="owner"
-          label="Upload Owner Photo"
-          onUpload={handleOwnerImgUpload}
-          onRemove={() => updateOwnerField('image', null)}
-        />
-      </div>
-
-      {/* Description */}
-      <div className="array-item">
-        <div className="array-item-title">Bio & Philosophy</div>
-        <div className="form-group">
-          <label className="form-label">Description / Bio</label>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:2,color:'rgba(255,255,255,0.2)',marginBottom:8}}>
-            Use a blank line between paragraphs to create separate blocks on the page.
-          </div>
-          <textarea className="form-textarea" rows={6} defaultValue={o.description || ''}
-            placeholder={'Tell your story — your passion for fitness, your journey…\n\nAdd a second paragraph here for more depth.'}
-            style={{ minHeight: 140, lineHeight: 1.7 }}
-            onBlur={e => updateOwnerField('description', e.target.value)} />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Philosophy / Signature Quote</label>
-          <input className="form-input" defaultValue={o.philosophy || ''}
-            placeholder="e.g. Every rep is a vote for who you want to become."
-            onBlur={e => updateOwnerField('philosophy', e.target.value)} />
-        </div>
-      </div>
-
-      {/* Accent Card */}
-      <div className="array-item">
-        <div className="array-item-title">Gold Accent Card (shown below photo)</div>
-        <div className="form-grid">
-          <div className="form-group">
-            <label className="form-label">Label</label>
-            <input className="form-input" defaultValue={o.accentLabel || ''} placeholder="Gym Founded"
-              onBlur={e => updateOwnerField('accentLabel', e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Value</label>
-            <input className="form-input" defaultValue={o.accentValue || ''} placeholder="Kirola Fitness · 2022"
-              onBlur={e => updateOwnerField('accentValue', e.target.value)} />
-          </div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="array-item">
-        <div className="array-item-title">Stats (3 numbers displayed under the name)</div>
-        {(o.stats || [
-          { num: '10+', label: 'Years Experience' },
-          { num: '500+', label: 'Members Coached' },
-          { num: '8', label: 'Certifications' },
-        ]).map((s, i) => (
-          <div key={i} className="form-grid" style={{ marginBottom: 12 }}>
-            <div className="form-group">
-              <label className="form-label">Stat {i + 1} — Number</label>
-              <input className="form-input" defaultValue={s.num} placeholder="10+"
-                onBlur={e => updateOwnerStat(i, 'num', e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Label</label>
-              <input className="form-input" defaultValue={s.label} placeholder="Years Experience"
-                onBlur={e => updateOwnerStat(i, 'label', e.target.value)} />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Journey Timeline */}
-      <div className="array-item">
-        <div className="array-item-title">Journey Timeline</div>
-        {(o.journey || []).map((item, i) => (
-          <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 4, padding: '16px', marginBottom: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 10, letterSpacing: 3, fontWeight: 700, textTransform: 'uppercase', color: '#c9a84c' }}>
-                Milestone {i + 1}
-              </span>
-              <RemoveBtn onClick={() => removeOwnerJourneyItem(i)} />
-            </div>
-            <div className="form-grid">
-              <div className="form-group">
-                <label className="form-label">Year</label>
-                <input className="form-input" defaultValue={item.year} placeholder="2022"
-                  onBlur={e => updateOwnerJourney(i, 'year', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Icon (emoji)</label>
-                <input className="form-input" defaultValue={item.icon} placeholder="🏋️"
-                  onBlur={e => updateOwnerJourney(i, 'icon', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Title</label>
-                <input className="form-input" defaultValue={item.title} placeholder="Kirola Was Born"
-                  onBlur={e => updateOwnerJourney(i, 'title', e.target.value)} />
-              </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Description</label>
-              <textarea className="form-textarea" defaultValue={item.desc} rows={3}
-                placeholder="Describe this milestone…"
-                onBlur={e => updateOwnerJourney(i, 'desc', e.target.value)} />
-            </div>
-          </div>
-        ))}
-        <AddBtn label="Add Milestone" onClick={addOwnerJourneyItem} />
-      </div>
-
+   {/* ── OWNER PROFILE ── */}
+{activeSection === 'owner' && (
+  <div className="section-card">
+    <div className="section-header">
+      <div className="section-title">Owner Profile</div>
+      <div className="section-desc">Photo → Cloudinary · All text → MongoDB</div>
     </div>
-  )
-})()}
+    <QualityBanner />
+
+    {/* Basic Info */}
+    <div className="array-item">
+      <div className="array-item-title">Basic Information</div>
+      <div className="form-grid">
+        <div className="form-group">
+          <label className="form-label">Owner Name</label>
+          <input className="form-input" defaultValue={content.owner?.name || ''} placeholder="e.g. Rajesh Kumar"
+            onBlur={e => updateOwnerField('name', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Role / Title</label>
+          <input className="form-input" defaultValue={content.owner?.role || ''} placeholder="Founder & Head Trainer"
+            onBlur={e => updateOwnerField('role', e.target.value)} />
+        </div>
+      </div>
+      <div className="form-group">
+        <label className="form-label">Tagline</label>
+        <input className="form-input" defaultValue={content.owner?.tagline || ''} placeholder="e.g. Strength Through Discipline"
+          onBlur={e => updateOwnerField('tagline', e.target.value)} />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Email (shown as contact button)</label>
+        <input className="form-input" type="email" defaultValue={content.owner?.email || ''} placeholder="owner@kirolafitness.com"
+          onBlur={e => updateOwnerField('email', e.target.value)} />
+      </div>
+    </div>
+
+    {/* Profile Photo */}
+    <div className="array-item">
+      <div className="array-item-title">Profile Photo <StorageBadge type="cloudinary" /></div>
+      <UploadThumb
+        src={content.owner?.image}
+        loadKey="owner"
+        label="Upload Owner Photo"
+        onUpload={handleOwnerImgUpload}
+        onRemove={() => updateOwnerField('image', null)}
+      />
+    </div>
+
+    {/* Bio */}
+    <div className="array-item">
+      <div className="array-item-title">Bio & Philosophy</div>
+      <div className="form-group">
+        <label className="form-label">Description / Bio</label>
+        <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:2,color:'rgba(255,255,255,0.2)',marginBottom:8}}>
+          Use a blank line between paragraphs to create separate blocks on the page.
+        </div>
+        <textarea className="form-textarea" rows={6} defaultValue={content.owner?.description || ''}
+          placeholder={'Tell your story…\n\nAdd a second paragraph here.'}
+          style={{ minHeight: 140, lineHeight: 1.7 }}
+          onBlur={e => updateOwnerField('description', e.target.value)} />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Philosophy / Signature Quote</label>
+        <input className="form-input" defaultValue={content.owner?.philosophy || ''}
+          placeholder="e.g. Every rep is a vote for who you want to become."
+          onBlur={e => updateOwnerField('philosophy', e.target.value)} />
+      </div>
+    </div>
+
+    {/* Accent Card */}
+    <div className="array-item">
+      <div className="array-item-title">Gold Accent Card</div>
+      <div className="form-grid">
+        <div className="form-group">
+          <label className="form-label">Label</label>
+          <input className="form-input" defaultValue={content.owner?.accentLabel || ''} placeholder="Gym Founded"
+            onBlur={e => updateOwnerField('accentLabel', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Value</label>
+          <input className="form-input" defaultValue={content.owner?.accentValue || ''} placeholder="Kirola Fitness · 2022"
+            onBlur={e => updateOwnerField('accentValue', e.target.value)} />
+        </div>
+      </div>
+    </div>
+
+
+    {/* Journey Timeline */}
+    <div className="array-item">
+      <div className="array-item-title">Journey Timeline</div>
+      {(content.owner?.journey || []).map((item, i) => (
+        <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 4, padding: '16px', marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 10, letterSpacing: 3, fontWeight: 700, textTransform: 'uppercase', color: '#c9a84c' }}>
+              Milestone {i + 1}
+            </span>
+            <RemoveBtn onClick={() => removeOwnerJourneyItem(i)} />
+          </div>
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="form-label">Year</label>
+              <input className="form-input" defaultValue={item.year || ''} placeholder="2022"
+                onBlur={e => updateOwnerJourney(i, 'year', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Icon (emoji)</label>
+              <input className="form-input" defaultValue={item.icon || ''} placeholder="🏋️"
+                onBlur={e => updateOwnerJourney(i, 'icon', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Title</label>
+              <input className="form-input" defaultValue={item.title || ''} placeholder="Kirola Was Born"
+                onBlur={e => updateOwnerJourney(i, 'title', e.target.value)} />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <textarea className="form-textarea" defaultValue={item.desc || ''} rows={3}
+              placeholder="Describe this milestone…"
+              onBlur={e => updateOwnerJourney(i, 'desc', e.target.value)} />
+          </div>
+        </div>
+      ))}
+      <AddBtn label="Add Milestone" onClick={addOwnerJourneyItem} />
+    </div>
+
+  </div>
+)}
 
 
           {/* ── CLASSES PAGE ── */}

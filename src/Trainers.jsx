@@ -159,7 +159,7 @@ export default function Trainers() {
   const trainersPage = content.trainersPage || {}
   const trainers     = trainersPage.trainers || []
   const headerBg     = trainers.find(t => t.photo)?.photo || null
-  const titleWords   = (trainersPage.title || 'Expert Trainers').split(' ')
+  const titleWords   = (trainersPage.title || 'OUR TEAM').split(' ')
 
   return (
     <>

@@ -7,8 +7,9 @@ export default function Navigation() {
   const links = [
     { name: 'HOME',      path: '/' },
     { name: 'ABOUT',     path: '/about' },
+    { name: 'OWNER',     path: '/owner' },
     { name: 'CLASSES',   path: '/classes' },
-    { name: 'TRAINERS',  path: '/trainers' },
+    { name: 'TEAM KIROLA',  path: '/trainers' },
     { name: 'EQUIPMENT', path: '/equipment' },
     { name: 'EVENTS',    path: '/events' },
     { name: 'REGISTER',  path: '/register' },

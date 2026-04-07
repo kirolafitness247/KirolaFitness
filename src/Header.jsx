@@ -7,7 +7,7 @@ const NAV_LINKS = [
   { name: 'ABOUT',           path: '/about' },
   { name: 'OWNER',           path: '/owner' },
   { name: 'CLASSES',         path: '/classes' },
-  { name: 'TRAINERS',        path: '/trainers' },
+  { name: 'TEAM KIROLA',        path: '/trainers' },
   { name: 'TRANSFORMATIONS', path: '/transformations' },
   { name: 'EQUIPMENT',       path: '/equipment' },
   { name: 'EVENTS',          path: '/events' },

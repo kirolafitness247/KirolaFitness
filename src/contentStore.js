@@ -24,7 +24,7 @@ export const defaultContent = {
   stats: [
     { num: '5K+', label: 'Active Members' },
     { num: '120+', label: 'Weekly Classes' },
-    { num: '40+', label: 'Expert Trainers' },
+    { num: '40+', label: 'Our Team' },
     { num: '15', label: 'Years of Excellence' },
   ],
   featuresSection: { label: 'Why Choose Us', title: 'World-Class\nFacilities' },

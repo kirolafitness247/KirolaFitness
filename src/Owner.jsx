@@ -15,7 +15,7 @@ const NAV_LINKS = [
   { name: 'HOME',            path: '/' },
   { name: 'ABOUT',           path: '/about' },
   { name: 'CLASSES',         path: '/classes' },
-  { name: 'TRAINERS',        path: '/trainers' },
+  { name: 'TEAM KIROLA',     path: '/trainers' },
   { name: 'TRANSFORMATIONS', path: '/transformations' },
   { name: 'EQUIPMENT',       path: '/equipment' },
   { name: 'EVENTS',          path: '/events' },
@@ -168,9 +168,7 @@ const styles = `
   }
 `
 
-// Default journey milestones — can be overridden by content manager later
-const DEFAULT_JOURNEY = [
-]
+const DEFAULT_JOURNEY = []
 
 export default function Owner() {
   const [content, setContent] = useState(getContent())
@@ -180,8 +178,24 @@ export default function Owner() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchContent().then(d => { setContent(d); setPageLoading(false) })
-      .catch(() => { setContent(getContent()); setPageLoading(false) })
+    const timeout = setTimeout(() => {
+      setContent(getContent())
+      setPageLoading(false)
+    }, 5000)
+
+    fetchContent()
+      .then(d => {
+        clearTimeout(timeout)
+        setContent(d)
+        setPageLoading(false)
+      })
+      .catch(() => {
+        clearTimeout(timeout)
+        setContent(getContent())
+        setPageLoading(false)
+      })
+
+    return () => clearTimeout(timeout)
   }, [])
 
   useEffect(() => {
@@ -200,12 +214,25 @@ export default function Owner() {
   const owner = content.owner || {}
   const journey = (owner.journey && owner.journey.length > 0) ? owner.journey : DEFAULT_JOURNEY
 
-  // Stats from owner content or defaults
-  const stats = owner.stats || [
-    { num: owner.experienceYears || '10+', label: 'Years Experience' },
-    { num: owner.membersCoached || '500+', label: 'Members Coached' },
-    { num: owner.certifications || '8', label: 'Certifications' },
-  ]
+  // ✅ FIX: Normalize stats — handle null entries and alternate API field names
+  const rawStats = owner.stats && Array.isArray(owner.stats) && owner.stats.length > 0
+    ? owner.stats
+    : null
+
+  const stats = (rawStats
+    ? rawStats.map(s => {
+        if (!s || typeof s !== 'object') return null
+        return {
+          num:   s.num   ?? s.value  ?? s.number ?? s.count ?? '—',
+          label: s.label ?? s.title  ?? s.name   ?? s.text  ?? '',
+        }
+      })
+    : [
+        { num: owner.experienceYears || '10+', label: 'Years Experience' },
+        { num: owner.membersCoached  || '500+', label: 'Members Coached' },
+        { num: owner.certifications  || '8',   label: 'Certifications' },
+      ]
+  ).filter(s => s && (s.num || s.label))
 
   if (pageLoading) return (
     <>
@@ -295,7 +322,7 @@ export default function Owner() {
             ) : (
               <div className="owner-accent-card">
                 <div className="owner-accent-label">Gym Founded</div>
-                <div className="owner-accent-value">Kirola Fitness<br /></div>
+                <div className="owner-accent-value">Kirola Fitness</div>
               </div>
             )}
           </div>
@@ -320,15 +347,6 @@ export default function Owner() {
 
             <div className="owner-divider" />
 
-            {/* Stats Row */}
-            <div className="owner-stats-row">
-              {stats.map((s, i) => (
-                <div className="owner-stat" key={i}>
-                  <div className="owner-stat-num">{s.num}</div>
-                  <div className="owner-stat-label">{s.label}</div>
-                </div>
-              ))}
-            </div>
 
             {/* Bio */}
             <div className="owner-bio">
@@ -372,7 +390,6 @@ export default function Owner() {
           </div>
         </div>
       </section>
-
 
       {/* CTA */}
       <section className="owner-cta">
