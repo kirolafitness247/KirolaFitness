@@ -1000,14 +1000,14 @@ function HomePage() {
             <span className="location-badge">📍 Our Location</span>
             <div className="location-address">
               <strong>Kirola Fitness</strong>
-              Jahajgarh, Sector 58<br />
-              Gurugram, Haryana<br />
+              1st & 2nd Floor, U-51, opposite Sobha Altus, adjacent Kulcha Lal Paratha, 
+              Sector 109 , Gurugram ,<br />Haryana<br />
               India
             </div>
             <div className="location-address">
               <strong>Hours</strong>
               Mon – Sat: 5:00 AM – 11:00 PM<br />
-              Sunday: 6:00 AM – 8:00 PM
+              Sunday: 9:00 AM – 9:00 PM
             </div>
             <a href={KIROLA_MAPS_URL} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
               <button className="btn-primary" style={{ marginTop: 8 }}>Open in Google Maps</button>
