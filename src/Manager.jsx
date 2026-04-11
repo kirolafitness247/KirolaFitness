@@ -964,8 +964,8 @@ export default function Manager() {
               </div>
               <div style={{background:'rgba(201,168,76,0.04)',border:'1px solid rgba(201,168,76,0.12)',borderRadius:6,padding:'20px 20px 4px',marginBottom:24}}>
                 <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,letterSpacing:4,fontWeight:700,textTransform:'uppercase',color:'rgba(201,168,76,0.7)',marginBottom:16}}>Stats Banner</div>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:12}}>
-                  {(tfPage.stats||[{num:'500+',label:'Transformations'},{num:'92%',label:'Success Rate'},{num:'8 Wks',label:'Avg. Timeframe'},{num:'40+',label:'Expert Coaches'}]).map((s,i) => (
+                <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12,marginBottom:12}}>
+               {(tfPage.stats?.length >= 4 ? tfPage.stats : [{num:'500+',label:'Transformations'},{num:'92%',label:'Success Rate'},{num:'8 Wks',label:'Avg. Timeframe'},{num:'40+',label:'Expert Coaches'}]).map((s,i) => (
                     <div key={i} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:4,padding:12}}>
                       <div className="form-group" style={{marginBottom:8}}><label className="form-label">Number</label><input className="form-input" defaultValue={s.num} onBlur={e => updateTfStat(i,'num',e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Label</label><input className="form-input" defaultValue={s.label} onBlur={e => updateTfStat(i,'label',e.target.value)} /></div>
