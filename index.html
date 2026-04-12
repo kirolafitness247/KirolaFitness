@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>my-project</title>
+    <title>Kirola Fitness</title>
+
+    <!-- GitHub Pages SPA redirect fix (keep this) -->
     <script>
       const params = new URLSearchParams(window.location.search);
       const path = params.get('path');
@@ -12,8 +14,53 @@
         window.history.replaceState(null, '', path);
       }
     </script>
+
+    <!-- Splash screen styles (loads instantly, no flash of black) -->
+    <style>
+      #splash {
+        position: fixed;
+        inset: 0;
+        background: #0a0a0a;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        z-index: 9999;
+        transition: opacity 0.5s ease;
+      }
+      #splash.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .splash-spinner {
+        width: 48px;
+        height: 48px;
+        border: 3px solid #333;
+        border-top-color: #c9a84c;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      .splash-logo-text {
+        color: #c9a84c;
+        font-family: serif;
+        font-size: 22px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
+
+    <!-- Splash: visible instantly before React loads -->
+    <div id="splash">
+      <div class="splash-logo-text">Kirola Fitness</div>
+      <div class="splash-spinner"></div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

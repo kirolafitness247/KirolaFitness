@@ -221,7 +221,7 @@ const styles = `
 `
 
 const whyUs = [
-  { icon: '👥', title: 'Expert Trainers',    desc: '40+ certified professionals with years of real-world coaching experience, ready to guide every step of your fitness journey — from your first session to your biggest milestone.' },
+  { icon: '👥', title: 'Expert Trainers',    desc: '8+ certified professionals with years of real-world coaching experience, ready to guide every step of your fitness journey — from your first session to your biggest milestone.' },
   { icon: '🏋️', title: 'Modern Equipment',   desc: 'The latest fitness technology from top global brands, maintained daily so you never have a reason to hold back. Every machine, every rack, every tool — purpose-built for performance.' },
   { icon: '⏰', title: 'Flexible Hours',     desc: 'Open 24 hours a day, 7 days a week. Your schedule is never an excuse — train at 6 AM before work, or midnight after a long shift. We are always here for you.' },
   { icon: '📊', title: 'Progress Tracking',  desc: 'Advanced analytics and body-composition tools help you see real numbers, not guesswork, at every milestone. Know exactly where you started and how far you have come.' },

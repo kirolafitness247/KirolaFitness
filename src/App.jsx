@@ -1006,8 +1006,8 @@ function HomePage() {
             </div>
             <div className="location-address">
               <strong>Hours</strong>
-              Mon – Sat: 5:00 AM – 11:00 PM<br />
-              Sunday: 9:00 AM – 9:00 PM
+              Mon – Sat: 5:30 AM – 11:00 PM<br />
+              Sunday: 9:00 AM – 10:00 PM
             </div>
             <a href={KIROLA_MAPS_URL} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
               <button className="btn-primary" style={{ marginTop: 8 }}>Open in Google Maps</button>
