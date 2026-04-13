@@ -112,13 +112,16 @@ function ReviewsDisplay({ refreshKey }) {
   const trackRef = useRef(null)
   const timerRef = useRef(null)
 
-  useEffect(() => {
-    setLoading(true)
-    fetch(`${API_BASE}/api/reviews`)
-      .then(r => r.json())
-      .then(d => { setReviews(d.data || []); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [refreshKey])
+  // In ReviewsDisplay, change the fetch to:
+useEffect(() => {
+  let cancelled = false
+  setLoading(true)
+  fetch(`${API_BASE}/api/reviews`)
+    .then(r => r.json())
+    .then(d => { if (!cancelled) { setReviews(d.data || []); setLoading(false) } })
+    .catch(() => { if (!cancelled) setLoading(false) })
+  return () => { cancelled = true }
+}, [refreshKey])
 
   // Auto-scroll every 3 seconds
   useEffect(() => {
@@ -821,8 +824,14 @@ function HomePage() {
   const [liked, setLiked] = useState(false)
   const [active, setActive] = useState('HOME')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [content, setContent] = useState(getContent())
-  const [pageLoading, setPageLoading] = useState(true)
+  const [pageLoading, setPageLoading] = useState(false) // ← just remove the loading gate
+  const [content, setContent] = useState(getContent())   // show cached immediately
+
+  useEffect(() => {
+  fetchContent()
+    .then(data => setContent(data))
+    .catch(() => {}) // already showing cached content, no problem
+}, [])
   const navigate = useNavigate()
 
   useEffect(() => {
