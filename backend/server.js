@@ -123,7 +123,8 @@ function uploadToCloudinary(buffer, folder = 'gym-website', originalName = '') {
     const options = {
       folder,
       resource_type: 'image',
-      quality: 'auto:best',
+      quality: 'auto:good',
+      fetch_format: 'auto',
       flags: 'preserve_transparency',
     }
     const ext = path.extname(originalName || '').toLowerCase()
