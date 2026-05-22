@@ -135,8 +135,8 @@ function uploadToCloudinary(buffer, folder = 'gym-website', originalName = '') {
         if (err) return reject(err)
         if (result?.secure_url) {
           result.secure_url = result.secure_url
-            .replace('/upload/', '/upload/q_auto:best/')
-            .replace('/q_auto:best/q_auto:best/', '/q_auto:best/')
+         .replace('/upload/', '/upload/q_auto:good,f_auto/')
+         .replace('/q_auto:good,f_auto/q_auto:good,f_auto/', '/q_auto:good,f_auto/')
         }
         resolve(result)
       }
